@@ -584,3 +584,17 @@ main.sheet.nokey .sheet-key { display: none; }
 }
 .sheet .staff svg { width: 270px; max-width: 100%; height: auto; }
 .klass-ex .staff svg { width: min(100%, 520px); }
+
+/* ---------- โหมดเด็กเล็ก: ปุ่มใหญ่ กดง่าย ---------- */
+main.play.kid .question h2 { font-size: clamp(1.5rem, 4.4vw, 2.1rem); line-height: 1.45; }
+main.play.kid .btn.say { margin: 0 0 16px; padding: 12px 22px; font-size: 1.05rem; }
+main.play.kid .audio-box { padding: 18px; justify-content: center; }
+main.play.kid .btn.audio { padding: 22px 46px; font-size: 1.5rem; border-radius: 999px; }
+main.play.kid .choices { grid-template-columns: 1fr 1fr; gap: 14px; }
+main.play.kid .choice { min-height: 104px; padding: 18px; font-size: clamp(1.2rem, 3.6vw, 1.6rem); font-weight: 700; justify-content: center; text-align: center; border-radius: 20px; border-width: 3px; }
+main.play.kid .choice .letter { display: none; }
+main.play.kid .choice:hover:not(:disabled) { transform: scale(1.02); }
+main.play.kid .feedback > b { font-size: 1.5rem; }
+main.play.kid .feedback p { font-size: 1.12rem; }
+main.play.kid .play-nav .btn { padding: 18px 34px; font-size: 1.2rem; }
+@media (max-width: 420px) { main.play.kid .choices { grid-template-columns: 1fr; } }

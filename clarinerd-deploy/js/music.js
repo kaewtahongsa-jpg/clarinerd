@@ -110,7 +110,7 @@ const Music = (() => {
     let t = c.currentTime + 0.06;
     for (const e of events) {
       if (e.click !== undefined) click(t, e.click);
-      else if (e.notes) e.notes.forEach((n) => tone(n, t, e.dur * 0.95, 0.28 / Math.sqrt(e.notes.length)));
+      else if (e.notes) e.notes.forEach((n) => tone(n, t, e.dur * 0.95, (0.28 * (e.vol || 1)) / Math.sqrt(e.notes.length))); // vol = ดัง–เบา (คอร์สเด็กเล็ก)
       t += e.dur;
     }
   }

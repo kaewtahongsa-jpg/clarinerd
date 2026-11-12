@@ -593,7 +593,7 @@
     }
 
     $app.innerHTML = `${header(`<button class="link" data-act="quit">✕ ออกจากแบบฝึกหัด</button>`)}
-      <main class="play">
+      <main class="play${P.set.kid ? ' kid' : ''}">
         <div class="play-top">
           <div><p class="small muted">${esc(P.course.short)} · ${esc(P.set.title)} · ${exam ? 'โหมดสอบ' : 'โหมดฝึก'}</p>
           <p class="qcount">ข้อ ${P.idx + 1} / ${P.qs.length}</p></div>
@@ -603,6 +603,7 @@
         <article class="card question">
           ${q.part ? `<span class="tag part">ตอนที่ ${q.part}</span> ` : ''}<span class="tag">${esc(q.tag)}</span>${q.retry ? ' <span class="tag retry">ฝึกซ้ำ</span>' : ''}
           <h2>${esc(q.q)}</h2>
+          ${P.set.kid && window.speechSynthesis ? '<button class="btn say" data-act="say">🔊 ฟังคำถาม</button>' : ''}
           ${q.notation ? '<div class="staff" id="staff"></div>' : ''}
           ${q.audio ? '<div class="audio-box"><button class="btn audio" data-act="listen">▶ ฟังเสียง</button><span class="small muted">กดฟังซ้ำได้</span></div>' : ''}
           <div class="choices">${choices}</div>
@@ -1149,7 +1150,12 @@
     who: 'นักเรียนคลาริเน็ตทุกระดับ ที่อยากเข้าใจเครื่องของตัวเอง การทดเสียง และประวัติเครื่อง',
     topics: ['ส่วนประกอบและการดูแลเครื่อง', 'ลิ้น รูปปาก และการหายใจ', 'ช่วงเสียงและ the break', 'คู่ 12 และ register key', 'การทดเสียง B♭ / A / E♭', 'ครอบครัวคลาริเน็ต', 'ประวัติและบทเพลงสำคัญ'],
     get: ['เนื้อหาที่ครูคลาริเน็ตเขียนเองจากสิ่งที่นักเรียนมักสงสัย', 'โจทย์สุ่มเรื่องช่วงเสียง คู่ 12 และการทดเสียง พร้อมภาพโน้ต', 'ใช้ทบทวนก่อนสอบปฏิบัติที่มีถามความรู้เรื่องเครื่อง'] };
-  const POSTERS = [['basics', 'Start here', 'พื้นฐาน<br>ดนตรี', 'เริ่มจากศูนย์ อ่านโน้ต จังหวะ ชาร์ป–แฟลต'], ['tpat22', 'TCAS', 'TPAT22<br>ดนตรี', 'ตามโครงสร้างข้อสอบล่าสุด ทั้งสากลและไทย'],
+  PREVIEW.kids = { kicker: 'Kids', title: 'ดนตรีสำหรับเด็กเล็ก', color: '#22c1c3',
+    who: 'เด็ก 4–9 ปีที่เพิ่งเริ่มรู้จักดนตรี และครูหรือผู้ปกครองที่อยากมีกิจกรรมฟังเสียงเล่นกับเด็ก',
+    topics: ['เสียงสูง–เสียงต่ำ', 'ดัง–เบา', 'เร็ว–ช้า', 'ยาว–สั้น', 'นับเสียง', 'เส้นกับช่อง', 'โด เร มี ฟา ซอล', 'ตัวดำ ตัวขาว ตัวกลม', 'ตา กับ ติติ'],
+    get: ['ระดับ 1 (4–6 ปี) ฟังเสียงแล้วเลือกรูป แทบไม่ต้องอ่าน มีปุ่มอ่านคำถามให้ฟัง', 'ระดับ 2 (6–9 ปี) เริ่มอ่านโน้ต 5 ตัวแรกและนับจังหวะ', 'ปุ่มใหญ่ กดง่ายบนแท็บเล็ต ทุกข้อสุ่มเสียงใหม่ มีคำแนะนำกิจกรรมสำหรับครูและผู้ปกครอง'],
+    gen: [['kHighLow', 'ง่าย'], ['kFastSlow', 'ง่าย'], ['kCount', 'กลาง'], ['kLineSpace', 'กลาง'], ['kSolfege', 'ยาก']] };
+  const POSTERS = [['kids', 'Kids 4–9', 'ดนตรี<br>เด็กเล็ก', 'ฟังเสียง เลือกรูป เริ่มอ่าน โด เร มี'], ['basics', 'Start here', 'พื้นฐาน<br>ดนตรี', 'เริ่มจากศูนย์ อ่านโน้ต จังหวะ ชาร์ป–แฟลต'], ['tpat22', 'TCAS', 'TPAT22<br>ดนตรี', 'ตามโครงสร้างข้อสอบล่าสุด ทั้งสากลและไทย'],
     ['abrsm14', 'Theory', 'ABRSM<br>Grade 1–4', 'ไล่ทีละเกรด โจทย์อังกฤษ เฉลยสองภาษา'], ['abrsm', 'Theory', 'ABRSM<br>Grade 5', 'โจทย์ภาษาอังกฤษ เฉลยสองภาษา'],
     ['ear', 'Aural', 'ฝึกหู', 'กดฟังเสียงในเว็บ สุ่มใหม่ทุกครั้ง'], ['uni', 'Audition', 'สอบตรง<br>คณะดนตรี', 'ทฤษฎี โสตทักษะ และเตรียมสอบปฏิบัติ'],
     ['clarinet', 'Clarinet', 'คลาริเน็ต', 'รู้จักเครื่อง การทดเสียง และประวัติ']];
@@ -1380,6 +1386,10 @@
     if (t.dataset.act === 'sh-reroll' && SHEET && SHEET.reroll) return startTeach('sheet', ...SHEET.reroll);
     if (t.dataset.gl) { e.preventDefault(); return openGloss(t.dataset.gl); }
     if (t.dataset.act === 'gl-close') return closeGloss();
+    if (t.dataset.act === 'say') { // อ่านคำถามให้เด็กที่ยังอ่านไม่คล่องฟัง
+      try { const u = new SpeechSynthesisUtterance(t.closest('.question').querySelector('h2').textContent); u.lang = 'th-TH'; u.rate = 0.85; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (x) {}
+      return;
+    }
     if (t.dataset.act === 'pv-listen' && PV) { Music.play(PV.qs[+t.dataset.i].audio); t.textContent = '↻ ฟังอีกครั้ง'; return; }
     if (t.dataset.act === 'copy-follow') {
       const msg = FOLLOW[t.dataset.code] || '';
