@@ -245,7 +245,7 @@
     const t = (id, label) => `<a href="#/admin/${id}" class="${active === id ? 'on' : ''}">${label}</a>`;
     const open = Store.adminQuestions ? Store.adminQuestions().filter((q) => !q.answer).length : 0;
     const owner = Store.role ? Store.role() === 'owner' && Store.staff && Store.staff() : false;
-    return header(`${t('codes', 'รหัสนักเรียน')}${t('results', 'ผลคะแนน')}${t('questions', 'คำถาม' + (open ? `<span class="badge">${open}</span>` : ''))}${owner ? t('staff', 'ครู') + t('usage', 'การใช้งาน') : ''}${t('settings', 'ตั้งค่า')}<button class="link" data-act="logout">ออก</button>`);
+    return header(`${t('codes', 'รหัสนักเรียน')}${t('results', 'ผลคะแนน')}${t('questions', 'คำถาม' + (open ? `<span class="badge">${open}</span>` : ''))}${t('teach', 'สอน')}${owner ? t('staff', 'ครู') + t('usage', 'การใช้งาน') : ''}${t('settings', 'ตั้งค่า')}<button class="link" data-act="logout">ออก</button>`);
   }
 
   /* ---------------- ตรวจสิทธิ์ ---------------- */
@@ -272,7 +272,7 @@
     if (s && s.type === 'admin') return go('#/admin/codes');
     const msg = flash; flash = '';
     $app.innerHTML = `
-      ${header('<a href="' + YT + '" target="_blank" rel="noopener">YouTube</a><a href="#/teacher">สำหรับครู</a>')}
+      ${header('<a href="' + YT + '" target="_blank" rel="noopener">YouTube</a><a href="#/teachers">สำหรับครู</a>')}
       <div class="landing">
         <section class="hero">
           <div>
@@ -1233,13 +1233,151 @@
     };
   }
 
+
+  /* =========================================================
+     เครื่องมือสำหรับครู: สอนหน้าห้อง + ใบงานพิมพ์ได้
+     ========================================================= */
+  let CLASS = null; // { title, sub, qs, idx, shown, back, demo }
+  let SHEET = null; // { title, sub, qs, back, demo, key }
+  const LETTERS = 'กขคง';
+  const demoQuestions = (id) => {
+    const m = PREVIEW[id]; if (!m) return null;
+    return m.gen ? m.gen.map(([g]) => Music.GEN[g]()) : ((window.SAMPLES || {})[id] || null);
+  };
+  function pageClass() {
+    const K = CLASS; if (!K) return go('#/teachers');
+    const q = K.qs[K.idx], last = K.idx === K.qs.length - 1;
+    $app.innerHTML = `<main class="klass">
+      <header class="klass-top"><a class="link" href="${K.back}">✕ ออก</a>
+        <span class="klass-title">${esc(K.title)}${K.sub ? ' · ' + esc(K.sub) : ''}</span>
+        <span class="klass-count">${K.idx + 1} / ${K.qs.length}</span></header>
+      <div class="progress"><i style="width:${pct(K.idx + (K.shown ? 1 : 0), K.qs.length)}%"></i></div>
+      <section class="klass-q">
+        <span class="tag">${esc(q.tag || '')}</span>
+        <h1>${esc(q.q)}</h1>
+        ${q.notation ? '<div class="staff" id="klStaff"></div>' : ''}
+        ${q.audio ? '<div class="audio-box"><button class="btn audio" data-act="kl-listen">▶ ฟังเสียง</button><span class="muted">กดฟังซ้ำได้</span></div>' : ''}
+        <div class="klass-choices">${q.choices.map((ch, i) => `<div class="kc ${K.shown ? (i === q.answer ? 'right' : 'dim') : ''}"><span>${LETTERS[i] || i + 1}</span>${esc(ch)}</div>`).join('')}</div>
+        ${K.shown ? `<div class="feedback ok klass-ex"><b>คำตอบ: ${LETTERS[q.answer]} · ${esc(q.choices[q.answer])}</b>${explainHTML(q, true)}</div>` : ''}
+      </section>
+      <footer class="klass-nav">
+        <button class="btn ghost" data-act="kl-prev" ${K.idx === 0 ? 'disabled' : ''}>← ก่อนหน้า</button>
+        ${K.shown ? (last ? `<a class="btn primary" href="${K.back}">จบ</a>` : '<button class="btn primary" data-act="kl-next">ข้อต่อไป →</button>') : '<button class="btn primary" data-act="kl-show">เฉลย</button>'}
+        <span class="small muted klass-keys">คีย์ลัด: Space = เฉลย/ถัดไป · ← → = เลื่อนข้อ</span>
+      </footer>
+      ${K.demo && K.shown && last ? `<section class="trial pv-cta"><div><b>นี่คือตัวอย่าง 5 ข้อ</b> บัญชีครูเปิดได้ทุกชุดในทุกคอร์ส พร้อมใบงานและคะแนนนักเรียนรายคน</div><a class="btn primary" href="${LINE}" target="_blank" rel="noopener">ขอบัญชีครูทดลองฟรี</a></section>` : ''}
+    </main>`;
+    if (q.notation) Music.renderStaff(document.getElementById('klStaff'), q.notation);
+    if (K.shown) renderExImages(q);
+  }
+  function klassStep(act) {
+    const K = CLASS; if (!K) return;
+    if (act === 'kl-show') K.shown = true;
+    else if (act === 'kl-next' && K.idx < K.qs.length - 1) { K.idx++; K.shown = false; }
+    else if (act === 'kl-prev' && K.idx > 0) { K.idx--; K.shown = false; }
+    else return;
+    Music.stop(); window.scrollTo(0, 0); pageClass();
+  }
+  document.addEventListener('keydown', (e) => {
+    if (!CLASS || !document.querySelector('main.klass') || document.getElementById('glVeil') || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); klassStep(CLASS.shown ? 'kl-next' : 'kl-show'); }
+    else if (e.key === 'ArrowRight') klassStep('kl-next');
+    else if (e.key === 'ArrowLeft') klassStep('kl-prev');
+  });
+
+  function pageSheet() {
+    const S = SHEET; if (!S) return go('#/teachers');
+    const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+    $app.innerHTML = `<div class="sheet-bar"><a class="link" href="${S.back}">← กลับ</a>
+        <span class="row">${S.reroll ? '<button class="btn" data-act="sh-reroll">สุ่มชุดใหม่</button>' : ''}
+        <label class="small"><input type="checkbox" id="shKey" ${S.key ? 'checked' : ''}> พิมพ์เฉลยด้วย</label>
+        <button class="btn primary" data-act="sh-print">พิมพ์ / บันทึก PDF</button></span></div>
+      <main class="sheet ${S.key ? '' : 'nokey'}">
+        <header class="sheet-head"><div><b>${esc(S.title)}</b><span>${esc(S.sub || '')}</span></div>
+          <div class="sheet-name"><span>ชื่อ ______________________________</span><span>วันที่ ________________</span><span>คะแนน ______ / ${S.qs.length}</span></div></header>
+        <ol class="sheet-qs">${S.qs.map((q, i) => `<li><p class="sq">${esc(q.q)}</p>
+          ${q.notation ? `<div class="staff sheet-staff" data-i="${i}"></div>` : ''}
+          <div class="sc">${q.choices.map((ch, j) => `<span><b>${LETTERS[j] || j + 1}.</b> ${esc(ch)}</span>`).join('')}</div></li>`).join('')}</ol>
+        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app${S.demo ? ' · ใบงานตัวอย่าง' : ''}</footer>
+        <section class="sheet-key"><h2>เฉลย · ${esc(S.title)}</h2><p class="small">${esc(S.sub || '')} · พิมพ์เมื่อ ${today}</p>
+          <ol>${S.qs.map((q) => { const x = q.ex || {}; const why = (x.th || q.e || '').split('\n')[0]; return `<li><b>${LETTERS[q.answer]}. ${esc(q.choices[q.answer])}</b>${why ? `<span>${esc(why)}</span>` : ''}</li>`; }).join('')}</ol></section>
+      </main>
+      ${S.demo ? `<section class="trial pv-cta sheet-cta"><div><b>นี่คือใบงานตัวอย่าง 5 ข้อ</b> บัญชีครูเลือกหัวข้อ จำนวนข้อ และสุ่มชุดใหม่ได้ไม่ซ้ำ</div><a class="btn primary" href="${LINE}" target="_blank" rel="noopener">ขอบัญชีครูทดลองฟรี</a></section>` : ''}`;
+    document.querySelectorAll('.sheet-staff').forEach((el) => Music.renderStaff(el, S.qs[+el.dataset.i].notation));
+    document.getElementById('shKey').onchange = (e) => { S.key = e.target.checked; document.querySelector('main.sheet').classList.toggle('nokey', !S.key); };
+  }
+
+  /* ---------- หน้าสำหรับครู (สาธารณะ): ลองใช้ได้เลยโดยไม่ต้องสมัคร ---------- */
+  function pageTeachers() {
+    const s = Store.session();
+    $app.innerHTML = `${header('<a href="#/">หน้านักเรียน</a><a href="#/teacher">เข้าสู่ระบบครู</a>')}
+      <div class="landing tland">
+        <section class="pv-hero" style="--c:#1ed760"><p class="eyebrow">สำหรับครูดนตรี</p>
+          <h1>เปิดแล้วสอนได้เลย<br>ไม่ต้องเตรียมสไลด์</h1>
+          <p class="lead">โจทย์ทฤษฎีดนตรี ภาพโน้ต เสียงฝึกหู และเฉลยละเอียดสองภาษา พร้อมใช้ในห้องเรียน ลองกดดูข้างล่างได้เลย ไม่ต้องสมัคร ไม่ต้องมีรหัส</p></section>
+        <section class="shelf"><h2>ลองสอนหน้าห้อง</h2>
+          <p class="muted">ฉายขึ้นจอหรือเปิดบนแท็บเล็ต โจทย์ตัวใหญ่ ให้นักเรียนตอบพร้อมกัน แล้วกดเฉลยเมื่อพร้อม เลือกคอร์สเพื่อลอง 5 ข้อ</p>
+          <div class="tdemo">${POSTERS.map(([id, k, big]) => `<a href="#/teach-demo/${id}" style="--c:${PREVIEW[id].color}"><span>${k}</span><b>${big.replace('<br>', ' ')}</b><i>ลองสอน →</i></a>`).join('')}</div></section>
+        <section class="shelf"><h2>ลองพิมพ์ใบงาน</h2>
+          <p class="muted">ใบงาน A4 พร้อมภาพโน้ต ช่องชื่อ–คะแนน และหน้าเฉลยแยก กดพิมพ์หรือบันทึกเป็น PDF ได้ทันที</p>
+          <div class="tdemo">${POSTERS.filter(([id]) => !PREVIEW[id].gen).map(([id, k, big]) => `<a href="#/sheet-demo/${id}" style="--c:${PREVIEW[id].color}"><span>${k}</span><b>${big.replace('<br>', ' ')}</b><i>ดูใบงาน →</i></a>`).join('')}</div></section>
+        <section class="shelf"><h2>เมื่อมีบัญชีครู</h2>
+          <div class="pv-cols">
+            <section class="card"><h2>ในห้องเรียน</h2><ul class="pv-get"><li>สอนหน้าห้องได้ทุกชุดในทุกคอร์ส ไม่จำกัดจำนวนข้อ</li><li>ใบงานเลือกหัวข้อและจำนวนข้อได้ สุ่มชุดใหม่ได้ไม่ซ้ำ</li><li>โจทย์สุ่มสร้างใหม่ทุกครั้ง ใช้ซ้ำกับหลายห้องได้</li></ul></section>
+            <section class="card"><h2>นอกห้องเรียน</h2><ul class="pv-get"><li>สร้างรหัสให้นักเรียนของตัวเอง ให้ฝึกเองที่บ้าน</li><li>เห็นคะแนนรายคน หัวข้อที่อ่อน และใครหายไปหลายวัน</li><li>นักเรียนส่งคำถามใต้เฉลย ครูตอบได้ในระบบ</li></ul></section>
+          </div></section>
+        <section class="trial pv-cta"><div><b>อยากใช้กับนักเรียนของตัวเอง?</b> ทัก LINE บอกว่าเป็นครูและสอนอะไร ดรีมจะเปิดบัญชีครูให้ทดลองใช้ฟรี</div>
+          <a class="btn primary" href="${LINE}" target="_blank" rel="noopener">ทัก LINE k.kaewta19</a></section>
+        ${s && s.type === 'admin' ? '<p class="center"><a href="#/admin/teach">ไปที่เครื่องมือสอนของฉัน →</a></p>' : ''}
+      </div>${footer()}`;
+  }
+  function startDemo(kind, id) {
+    const src = demoQuestions(id), m = PREVIEW[id];
+    if (!src) return go('#/teachers');
+    const qs = src.map(prepare);
+    if (kind === 'class') { CLASS = { title: m.title, sub: 'ตัวอย่างสอนหน้าห้อง', qs, idx: 0, shown: false, back: '#/teachers', demo: true }; pageClass(); }
+    else { SHEET = { title: m.title, sub: 'ใบงานตัวอย่าง', qs: qs.filter((q) => !q.audio), back: '#/teachers', demo: true, key: true }; pageSheet(); }
+  }
+
+  /* ---------- หน้า “สอน” ของครู: เลือกชุดแล้วสอนหน้าห้อง / ทำใบงาน ---------- */
+  function pageAdminTeach() {
+    if (!requireAdmin()) return;
+    $app.innerHTML = `${adminNav('teach')}
+      <main><div class="page-head"><h1>สอน</h1><p class="muted">เลือกชุดแล้วกด “สอนหน้าห้อง” เพื่อฉายโจทย์ทีละข้อ หรือ “ใบงาน” เพื่อพิมพ์แจก ไม่มีการเก็บคะแนนในโหมดนี้</p></div>
+      ${COURSES.filter((c) => !c.comingSoon).map((c) => `<details class="card teach-course" style="--c:${c.color}"><summary><b>${esc(c.title)}</b><span class="small muted"> · ${c.units.length} บท</span></summary>
+        ${c.units.map((u, i) => `<div class="teach-unit"><p><span class="num" style="background:${c.color}">${i + 1}</span><b>${esc(u.title)}</b></p>
+          <ul class="sets">${u.sets.map((st) => `<li><div><b>${esc(st.title)}</b></div><div class="set-btns">
+            <button class="btn primary" data-teach="class|${c.id}|${st.id}">สอนหน้าห้อง</button>
+            <button class="btn" data-teach="sheet|${c.id}|${st.id}">ใบงาน</button></div></li>`).join('')}</ul></div>`).join('')}
+      </details>`).join('')}
+      </main>`;
+  }
+  async function startTeach(kind, courseId, setId, n) {
+    const c = courseById(courseId), st = c && allSets(c).find((x) => x.id === setId);
+    if (!st) return;
+    const veil = document.createElement('div'); veil.className = 'loading-veil'; veil.innerHTML = '<div class="loading"><span></span>กำลังเตรียมโจทย์…</div>'; document.body.appendChild(veil);
+    let ok = false; try { ok = await Store.loadCourseAdmin(courseId); } catch (e) { ok = false; }
+    veil.remove();
+    let qs = ok ? buildQuestions(st) : [];
+    if (!qs.length) return alert('เปิดชุดนี้ไม่ได้ บัญชีนี้ยังไม่มีสิทธิ์อ่านคลังข้อสอบ หรือยังไม่ได้อัปโหลดเนื้อหา');
+    const back = '#/admin/teach';
+    if (kind === 'class') { CLASS = { title: c.short, sub: st.title, qs, idx: 0, shown: false, back }; go('#/admin/class'); }
+    else { qs = qs.filter((q) => !q.audio).slice(0, n || 10); if (!qs.length) return alert('ชุดนี้เป็นโจทย์ฟังเสียงทั้งหมด พิมพ์เป็นใบงานไม่ได้ ใช้ “สอนหน้าห้อง” แทน');
+      SHEET = { title: c.short, sub: st.title, qs, back, key: true, reroll: [courseId, setId, n || 10] }; go('#/admin/sheet'); }
+  }
+
   /* =========================================================
      การคลิก (ใช้ร่วมทุกหน้า)
      ========================================================= */
   document.addEventListener('click', (e) => {
     if (e.target.id === 'glVeil') return closeGloss();
-    const t = e.target.closest('[data-act],[data-play],[data-choice],[data-jump],[data-href],[data-lang],[data-gl],[data-pv]');
+    const t = e.target.closest('[data-act],[data-play],[data-choice],[data-jump],[data-href],[data-lang],[data-gl],[data-pv],[data-teach]');
     if (!t) return;
+    if (t.dataset.teach) { const [k, c, st] = t.dataset.teach.split('|'); return startTeach(k, c, st); }
+    if (/^kl-(show|next|prev)$/.test(t.dataset.act || '')) return klassStep(t.dataset.act);
+    if (t.dataset.act === 'kl-listen' && CLASS) { Music.play(CLASS.qs[CLASS.idx].audio); t.textContent = '↻ ฟังอีกครั้ง'; return; }
+    if (t.dataset.act === 'sh-print') return window.print();
+    if (t.dataset.act === 'sh-reroll' && SHEET && SHEET.reroll) return startTeach('sheet', ...SHEET.reroll);
     if (t.dataset.gl) { e.preventDefault(); return openGloss(t.dataset.gl); }
     if (t.dataset.act === 'gl-close') return closeGloss();
     if (t.dataset.act === 'pv-listen' && PV) { Music.play(PV.qs[+t.dataset.i].audio); t.textContent = '↻ ฟังอีกครั้ง'; return; }
@@ -1329,6 +1467,9 @@
       case 'info': return pageInfo(arg);
       case 'questions': return pageQuestions();
       case 'preview': return pagePreview(arg);
+      case 'teachers': return pageTeachers();
+      case 'teach-demo': return startDemo('class', arg);
+      case 'sheet-demo': return startDemo('sheet', arg);
       case 'glossary': return pageGlossary();
       case 'admin':
         if (arg === 'results') return pageAdminResults();
@@ -1338,6 +1479,9 @@
         if (arg === 'questions') return pageAdminQuestions();
         if (arg === 'staff') return pageAdminStaff();
         if (arg === 'usage') return pageAdminUsage();
+        if (arg === 'teach') return pageAdminTeach();
+        if (arg === 'class') return requireAdmin() && (CLASS ? pageClass() : go('#/admin/teach'));
+        if (arg === 'sheet') return requireAdmin() && (SHEET ? pageSheet() : go('#/admin/teach'));
         return pageAdminCodes();
       default: return go('#/');
     }

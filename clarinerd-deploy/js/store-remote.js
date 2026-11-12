@@ -19,7 +19,7 @@
     ? { courses: JSON.parse(JSON.stringify(window.COURSES)), banks: window.BANKS } : null;
   window.BANKS = window.BANKS || {};
 
-  const C = { booted: false, rec: null, reason: '', attempts: [], codes: [], allAttempts: [], loadedCourses: new Set(), isAdmin: false, myQ: [], adminQ: [], qReady: true, bankIndex: {}, role: 'owner', staff: null, invites: [], usage: [] };
+  const C = { adminCourses: new Set(), booted: false, rec: null, reason: '', attempts: [], codes: [], allAttempts: [], loadedCourses: new Set(), isAdmin: false, myQ: [], adminQ: [], qReady: true, bankIndex: {}, role: 'owner', staff: null, invites: [], usage: [] };
 
   const session = () => { try { return JSON.parse(localStorage.getItem(SKEY)); } catch (e) { return null; } };
   const setSession = (s) => { try { s ? localStorage.setItem(SKEY, JSON.stringify(s)) : localStorage.removeItem(SKEY); } catch (e) {} };
@@ -77,6 +77,18 @@
     (course.units || []).forEach((u) => { if (d.lessons && d.lessons[u.id]) u.lesson = d.lessons[u.id]; });
     if (d.examInfo) course.examInfo = d.examInfo;
     C.loadedCourses.add(id);
+  }
+
+  /** ครูเปิดเนื้อหาคอร์สเพื่อใช้สอนหน้าห้อง / ทำใบงาน (อ่านตรงจากตาราง ต้องเป็นครูที่มีสิทธิ์) */
+  async function loadCourseAdmin(id) {
+    if (!id || C.adminCourses.has(id)) return true;
+    if (LOCAL) { C.adminCourses.add(id); return true; } // เปิดจากเครื่องต้นฉบับ มีคลังข้อสอบอยู่แล้ว
+    const { data, error } = await sb.from('course_content').select('lessons,banks').eq('course_id', id).maybeSingle();
+    if (error || !data) return false;
+    Object.assign(window.BANKS, data.banks || {});
+    const course = (window.COURSES || []).find((c) => c.id === id);
+    if (course) (course.units || []).forEach((u) => { if (data.lessons && data.lessons[u.id]) u.lesson = data.lessons[u.id]; });
+    C.adminCourses.add(id); return true;
   }
 
   async function loadAdmin() {
@@ -265,7 +277,7 @@
     myQuestions: () => C.myQ,
     adminQuestions: () => C.adminQ,
     questionsReady: () => C.qReady,
-    board: () => C.board || null, setBoardProfile,
+    board: () => C.board || null, setBoardProfile, loadCourseAdmin,
     isV2, bankCount, bankTags, fetchQuestions, addStaff, removeStaff,
     role: () => C.role,
     staff: () => C.staff,

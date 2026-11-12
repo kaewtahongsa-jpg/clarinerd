@@ -123,5 +123,6 @@ window.Store = (() => {
   async function adminLogin(email, pw) { if (pw !== adminPw()) return { ok: false, reason: 'รหัสผ่านไม่ถูกต้อง' }; setSession({ type: 'admin' }); return { ok: true }; }
   async function logout() { setSession(null); }
 
-  return { board, setBoardProfile, remote, canUpload, prepare, login, adminLogin, logout, today, addDays, codes, findCode, checkCode, createCode, updateCode, deleteCode, attempts, addAttempt, attemptById, attemptsFor, session, setSession, adminPw, setAdminPw, exportAll, importAll, resetAll, askQuestion, myQuestions, markAnswersSeen, adminQuestions, answerQuestion, deleteQuestion };
+  async function loadCourseAdmin() { return true; }
+  return { loadCourseAdmin, board, setBoardProfile, remote, canUpload, prepare, login, adminLogin, logout, today, addDays, codes, findCode, checkCode, createCode, updateCode, deleteCode, attempts, addAttempt, attemptById, attemptsFor, session, setSession, adminPw, setAdminPw, exportAll, importAll, resetAll, askQuestion, myQuestions, markAnswersSeen, adminQuestions, answerQuestion, deleteQuestion };
 })();
