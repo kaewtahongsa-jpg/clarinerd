@@ -264,5 +264,60 @@
     'The plan of a piece, with letters for sections.\nBinary: A B\nTernary: A B A\nRondo: A B A C A (A keeps returning)\nTheme and variations: a tune followed by altered versions.\nSonata form: exposition (two themes) – development – recapitulation (both themes return, the second now in the home key).',
     ['cadence', 'relative']);
 
+  /* ---------- 9. ดนตรีไทย ---------- */
+  c = 'ดนตรีไทย';
+  add(c, 'th-ching', 'ฉิ่ง–ฉับ', 'Ching (Thai hand cymbals)', ['ฉิ่ง', 'ฉับ', 'ching'],
+    'ฉิ่งเป็นเครื่องกำกับจังหวะหลักของวงดนตรีไทย ตีได้ 2 เสียง\n“ฉิ่ง” ตีแล้วปล่อยให้ก้อง เป็นจังหวะเบา\n“ฉับ” ตีแล้วประกบปิดเสียง เป็นจังหวะหนัก\nดนตรีไทยวางจังหวะหนักไว้ท้ายห้อง ต่างจากดนตรีสากลที่จังหวะหนักอยู่ต้นห้อง',
+    'The ching (small hand cymbals) keeps the main beat in a Thai ensemble. It makes two sounds.\n“Ching”: struck and left to ring, the weak beat.\n“Chap”: struck and damped, the strong beat.\nThai music puts the strong beat at the end of the bar, unlike Western music where it comes first.',
+    ['th-natab', 'th-chan', 'beat']);
+  add(c, 'th-natab', 'หน้าทับ', 'Na thap (drum pattern)', ['หน้าทับ', 'ปรบไก่', 'สองไม้'],
+    'แบบแผนการตีเครื่องหนัง เช่น ตะโพน กลองแขก โทน–รำมะนา ที่วนซ้ำไปตลอดเพลง ใช้กำกับความยาวของประโยคเพลง\nหน้าทับที่ใช้บ่อยคือ ปรบไก่ (ประโยคยาว) และสองไม้ (ประโยคสั้นกว่า)\nฉิ่งบอกจังหวะย่อย ส่วนหน้าทับบอกโครงสร้างประโยค',
+    'A repeating drum pattern (on the taphon, klong khaek or thon–rammana) that runs through a piece and marks the length of its phrases.\nThe two common ones are prop kai (long phrases) and song mai (shorter phrases).\nThe ching marks the small beats; the na thap marks the phrase structure.',
+    ['th-ching', 'th-chan']);
+  add(c, 'th-chan', 'อัตราจังหวะไทย (สามชั้น สองชั้น ชั้นเดียว)', 'Thai metrical levels', ['สามชั้น', 'สองชั้น', 'ชั้นเดียว', 'อัตราสามชั้น'],
+    'อัตราจังหวะของเพลงไทยมี 3 ระดับ บอกทั้งความช้า–เร็วและความยาวของทำนอง\nสามชั้น: ช้าที่สุด ทำนองยืดยาวที่สุด\nสองชั้น: ปานกลาง ยาวครึ่งหนึ่งของสามชั้น\nชั้นเดียว: เร็วที่สุด สั้นที่สุด\nเพลงที่บรรเลงครบทั้งสามอัตราต่อกันเรียกว่าเพลงเถา',
+    'Thai pieces exist at three metrical levels, which set both the speed and the length of the melody.\nSam chan: slowest and most drawn out.\nSong chan: moderate, half the length of sam chan.\nChan diao: fastest and shortest.\nA piece played at all three levels in a row is a phleng thao.',
+    ['th-thao', 'th-ching', 'th-natab']);
+  add(c, 'th-thao', 'เพลงเถา เพลงตับ เพลงเดี่ยว เพลงโหมโรง', 'Types of Thai pieces', ['เพลงเถา', 'เพลงตับ', 'เพลงเดี่ยว', 'เพลงโหมโรง', 'โหมโรง', 'ตับเรื่อง', 'ลูกหมด'],
+    'เพลงเถา: เพลงเดียวกันบรรเลงครบ 3 อัตรา จากสามชั้น สองชั้น ถึงชั้นเดียว แล้วมักจบด้วยลูกหมด\nเพลงตับ: หลายเพลงนำมาเรียงต่อกันเป็นชุด มีตับเรื่อง (เรียงตามเนื้อเรื่อง) และตับเพลง (เรียงตามทำนองที่เข้ากัน)\nเพลงเดี่ยว: บรรเลงเครื่องดนตรีชิ้นเดียวเพื่อแสดงฝีมือ ใช้ทางที่ยากและซับซ้อน\nเพลงโหมโรง: เพลงเปิด บรรเลงก่อนเริ่มงานหรือการแสดง เทียบได้กับ Overture',
+    'Phleng thao: one piece played at all three metrical levels, slow to fast, usually ending with a short coda (luk mot).\nPhleng tap: a suite of several pieces, ordered by story (tap rueang) or by matching melody (tap phleng).\nPhleng diao: a solo showpiece for one instrument, using a difficult, elaborate version of the tune.\nPhleng homrong: an opening piece played before an event or performance, like an overture.',
+    ['th-chan', 'th-thang', 'form']);
+  add(c, 'th-piphat', 'วงปี่พาทย์', 'Piphat ensemble', ['ปี่พาทย์เครื่องห้า', 'ปี่พาทย์เครื่องคู่', 'ปี่พาทย์เครื่องใหญ่', 'ปี่พาทย์นางหงส์', 'ปี่พาทย์มอญ', 'ปี่พาทย์', 'piphat'],
+    'วงดนตรีไทยที่มีแต่เครื่องตีและเครื่องเป่า ใช้ประกอบพิธีและการแสดงโขนละคร\nเครื่องห้า (เล็กที่สุด): ปี่ใน ระนาดเอก ฆ้องวงใหญ่ ตะโพน กลองทัด และฉิ่ง\nเครื่องคู่: เพิ่มระนาดทุ้ม ฆ้องวงเล็ก ปี่นอก\nเครื่องใหญ่: เพิ่มระนาดเอกเหล็กและระนาดทุ้มเหล็ก\nปี่พาทย์นางหงส์และปี่พาทย์มอญใช้ในงานศพ',
+    'A Thai ensemble of percussion and winds only, used for ceremonies and for masked dance and theatre.\nKhrueang ha (the smallest): pi nai, ranat ek, khong wong yai, taphon, klong that and ching.\nKhrueang khu: adds ranat thum, khong wong lek and pi nok.\nKhrueang yai: adds the two metal xylophones.\nPiphat nang hong and piphat mon are used at funerals.',
+    ['th-mahori', 'th-ranat', 'th-4types']);
+  add(c, 'th-mahori', 'วงเครื่องสาย และวงมโหรี', 'Khrueang sai & mahori ensembles', ['วงเครื่องสาย', 'วงมโหรี', 'มโหรี', 'mahori'],
+    'วงเครื่องสาย: ซอด้วง (นำวง) ซออู้ จะเข้ ขลุ่ยเพียงออ และเครื่องประกอบจังหวะคือโทน รำมะนา ฉิ่ง เสียงนุ่ม ใช้ในงานมงคล\nวงมโหรี: นำวงเครื่องสายมารวมกับเครื่องตีของปี่พาทย์ (ระนาด ฆ้องวง) จึงเป็นวงเดียวที่มีครบทั้งดีด สี ตี เป่า',
+    'Khrueang sai (string ensemble): so duang (leader), so u, chakhe, khlui phiang o, with thon, rammana and ching for rhythm. Soft in sound, used for auspicious occasions.\nMahori: the string ensemble combined with the melodic percussion of the piphat (xylophones and gong circles), so it is the one ensemble with all four types: plucked, bowed, struck and blown.',
+    ['th-piphat', 'th-4types', 'th-so']);
+  add(c, 'th-ranat', 'ระนาดเอก ฆ้องวงใหญ่ และลูกฆ้อง', 'Ranat ek, khong wong yai & the core melody', ['ระนาดเอก', 'ฆ้องวงใหญ่', 'ลูกฆ้อง', 'ทางฆ้อง', 'ทำนองหลัก'],
+    'ฆ้องวงใหญ่บรรเลง “ลูกฆ้อง” ซึ่งเป็นทำนองหลักและแกนของเพลง เครื่องอื่นทุกชิ้นแปรทำนองโดยยึดลูกฆ้องเป็นหลัก\nระนาดเอกเป็นผู้นำวง บรรเลงเก็บถี่ ๆ และแปรทำนองได้หลากหลายที่สุด\nตะโพนและกลองคุมหน้าทับ ฉิ่งคุมจังหวะย่อย',
+    'The khong wong yai (large gong circle) plays the luk khong, the core melody that every other instrument varies.\nThe ranat ek (treble xylophone) leads the ensemble with fast, running variations.\nThe taphon and drums keep the na thap; the ching keeps the small beats.',
+    ['th-thang', 'th-piphat', 'th-natab']);
+  add(c, 'th-thang', '“ทาง” และการประสานเสียงแบบไทย', 'Thang & Thai heterophony', ['ทางของตน', 'แปรทำนอง', 'ทางเดี่ยว', 'ทางของ'],
+    '“ทาง” คือวิธีแปรทำนองที่เป็นเอกลักษณ์ของเครื่องดนตรีแต่ละชนิด (หรือของแต่ละสำนัก แต่ละครู)\nดนตรีไทยไม่ใช้ระบบคอร์ด ทุกเครื่องยึดทำนองหลักเดียวกัน แต่บรรเลงตามทางของตนพร้อมกัน เสียงที่ซ้อนกันจึงเกิดเป็นการประสานแบบ Heterophony',
+    'Thang is the characteristic way each instrument (or each school or teacher) varies the melody.\nThai music has no chord system: everyone follows the same core melody but plays it in their own thang at once, and the overlapping lines make heterophony.',
+    ['th-ranat', 'texture', 'th-thao']);
+  add(c, 'th-4types', 'ดีด สี ตี เป่า', 'The four types of Thai instruments', ['ดีด สี ตี เป่า', 'เครื่องดีด', 'เครื่องสี', 'เครื่องตี', 'เครื่องเป่า'],
+    'เครื่องดนตรีไทยแบ่งตามวิธีทำให้เกิดเสียงเป็น 4 ประเภท\nดีด: จะเข้ กระจับปี่ พิณ ซึง\nสี: ซอด้วง ซออู้ ซอสามสาย สะล้อ\nตี: ระนาด ฆ้อง ฉิ่ง ตะโพน กลอง โปงลาง\nเป่า: ปี่ ขลุ่ย แคน\nเวลาเทียบกับเครื่องสากล ให้ดูวิธีเกิดเสียง เช่น ซอด้วงคู่กับไวโอลิน (สี) ขลุ่ยคู่กับรีคอร์ดเดอร์ (เป่า ไม่มีลิ้น)',
+    'Thai instruments are classed by how the sound is made.\nPlucked: chakhe, krachappi, phin, sueng.\nBowed: so duang, so u, so sam sai, salo.\nStruck: ranat, khong, ching, taphon, drums, pong lang.\nBlown: pi, khlui, khaen.\nTo compare with Western instruments, match the method: so duang with violin (bowed), khlui with recorder (blown, no reed).',
+    ['th-so', 'th-folk', 'th-mahori']);
+  add(c, 'th-so', 'ซอด้วง ซออู้ จะเข้ ขลุ่ย', 'So duang, so u, chakhe & khlui', ['ซอด้วง', 'ซออู้', 'ซอสามสาย', 'จะเข้', 'ขลุ่ยเพียงออ', 'ขลุ่ย'],
+    'ซอด้วง: กระบอกไม้ขึงหนังงู เสียงสูง แหลม เป็นผู้นำวงเครื่องสาย\nซออู้: กะโหลกทำจากกะลามะพร้าว เสียงทุ้ม นุ่ม\nซอสามสาย: ซอ 3 สาย ใช้ในวงมโหรีและคลอเสียงร้อง\nจะเข้: เครื่องดีด 3 สาย วางราบกับพื้น ดีดด้วยไม้ดีดที่พันติดนิ้ว\nขลุ่ย: เครื่องเป่าไม่มีลิ้น มีดากบังคับลมเหมือนรีคอร์ดเดอร์',
+    'So duang: wooden cylinder with snakeskin; high and bright; leads the string ensemble.\nSo u: body made from a coconut shell; low and mellow.\nSo sam sai: three-string fiddle, used in the mahori and to accompany singing.\nChakhe: three-string floor zither, plucked with a plectrum tied to the finger.\nKhlui: a reedless flute with a block that channels the air, like a recorder.',
+    ['th-4types', 'th-mahori', 'th-folk']);
+  add(c, 'th-folk', 'เครื่องดนตรีพื้นบ้าน 4 ภาค', 'Regional folk instruments', ['แคน', 'โปงลาง', 'โหวด', 'สะล้อ', 'ซึง', 'กลองโนรา', 'โนรา'],
+    'ภาคเหนือ: สะล้อ (สี) ซึง (ดีด) ปี่จุม บรรเลงประกอบการขับซอ\nภาคอีสาน: แคน (เป่า ใช้ลิ้นโลหะอิสระ เล่นได้หลายเสียงพร้อมกัน) พิณ (ดีด) โปงลาง (ตี) โหวด (เป่า)\nภาคใต้: ทับ กลอง ปี่ โหม่ง ฉิ่ง แตระ ใช้ประกอบโนราและหนังตะลุง\nภาคกลาง: เครื่องดนตรีในวงปี่พาทย์ เครื่องสาย และกลองยาว',
+    'North: salo (bowed), sueng (plucked) and pi chum, accompanying so singing.\nNortheast (Isan): khaen (a free-reed mouth organ that plays several notes at once), phin (plucked), pong lang (struck), wot (blown).\nSouth: thap, drums, pi, mong, ching and trae, accompanying nora and shadow puppetry.\nCentre: the instruments of the piphat and string ensembles, and the long drum.',
+    ['th-4types', 'th-so']);
+  add(c, 'th-tuning', 'ระบบเสียงไทยและโน้ตไทย', 'Thai tuning & notation', ['โน้ตไทย', 'โน้ตเพลงไทย', 'ระบบเสียงของดนตรีไทย', '7 เสียงในหนึ่งช่วงทบ'],
+    'ดนตรีไทยแบ่งหนึ่งช่วงทบเป็น 7 เสียงที่ห่างกันใกล้เคียงกัน จึงไม่มีครึ่งเสียงแบบสากล และเทียบกับเปียโนไม่ตรงพอดี ทำนองส่วนใหญ่ใช้ 5 เสียงหลักในแต่ละช่วง\nโน้ตไทยใช้ตัวอักษร ด ร ม ฟ ซ ล ท เขียนบรรทัดละ 8 ห้อง ห้องละ 4 ตัว เครื่องหมาย “-” คือลากเสียงหรือเว้น และตัวท้ายห้องคือเสียงที่ตกจังหวะ',
+    'Thai music divides the octave into seven nearly equal steps, so it has no Western-style semitones and does not match the piano exactly. Most melodies use five main notes at a time.\nThai notation uses letters for do re mi fa sol la ti, written eight bars to a line with four letters per bar. A dash means hold or rest, and the last letter of each bar falls on the beat.',
+    ['th-ching', 'chromatic', 'octave']);
+  add(c, 'th-custom', 'ไหว้ครู และเพลงพิธีการ', 'Wai khru & ceremonial pieces', ['ไหว้ครู', 'ครอบมือ', 'สาธุการ', 'มหาฤกษ์', 'มหาชัย', 'สามัคคีชุมนุม'],
+    'ไหว้ครู: พิธีแสดงความเคารพครูก่อนเริ่มเรียนดนตรีไทย เครื่องดนตรีถือเป็นของสูง จึงไม่ก้าวข้าม ไม่นั่งทับ ไม่ใช้เท้า\nสาธุการ: เพลงหน้าพาทย์ใช้บูชาพระรัตนตรัย และเป็นเพลงแรกที่ศิษย์ปี่พาทย์ได้ต่อ\nมหาฤกษ์: บรรเลงตอนเปิดงานหรือฤกษ์สำคัญ\nมหาชัย: บรรเลงต้อนรับประธานหรือบุคคลสำคัญ และใช้อวยพร\nสามัคคีชุมนุม: ร้องตอนปิดงาน ใช้ทำนอง Auld Lang Syne',
+    'Wai khru: the ceremony of paying respect to teachers before studying Thai music. Instruments are treated as sacred: never step over, sit on or touch them with the feet.\nSathukan: a sacred piece honouring the Triple Gem, and the first piece a piphat student learns.\nMaha Roek: played at the opening of an event or an auspicious moment.\nMaha Chai: played to welcome or honour the presiding person, and for congratulations.\nSamakkhi Chumnum: sung at the close, to the tune of Auld Lang Syne.',
+    ['th-piphat', 'th-thao']);
+
   window.GLOSSARY = G;
 })();
