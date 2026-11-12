@@ -26,7 +26,7 @@
 
   const rowToAttempt = (r) => ({ id: r.id, code: r.code, name: r.name, courseId: r.course_id, setId: r.set_id, setTitle: r.set_title, mode: r.mode, score: r.score, total: r.total, durSec: r.dur_sec, items: r.items || [], date: r.created_at });
   const rowToQ = (r) => ({ id: r.id, code: r.code, name: r.name, courseId: r.course_id, setId: r.set_id, qId: r.q_id, snapshot: r.snapshot || {}, message: r.message, answer: r.answer, answeredAt: r.answered_at, seen: r.seen, date: r.created_at });
-  const rowToCode = (r) => ({ teacherId: r.teacher_id || null, code: r.code, name: r.name, courses: r.courses || [], expires: r.expires, active: r.active, note: r.note || '', created: (r.created_at || '').slice(0, 10) });
+  const rowToCode = (r) => ({ nick: r.nick || '', teacherId: r.teacher_id || null, code: r.code, name: r.name, courses: r.courses || [], expires: r.expires, active: r.active, note: r.note || '', created: (r.created_at || '').slice(0, 10) });
   const fail = (error, what) => { if (error) { console.error(what, error); throw new Error(what + ': ' + (error.message || error)); } };
 
   async function rpc(fn, args) { const { data, error } = await sb.rpc(fn, args); fail(error, fn); return data; }
@@ -50,6 +50,15 @@
       C.rec = r.rec; C.reason = '';
     }
     C.attempts = (await rpc('my_attempts', { p_code: C.rec.code })).map(rowToAttempt);
+  }
+  async function loadBoard() {
+    if (!C.rec) return;
+    const { data, error } = await sb.rpc('leaderboard', { p_code: C.rec.code });
+    C.board = error ? null : data; // null = ยังไม่ได้รัน leaderboard.sql
+  }
+  async function setBoardProfile(nick, show) {
+    await rpc('set_board_profile', { p_code: C.rec.code, p_nick: nick, p_show: show });
+    await loadBoard();
   }
   async function loadMyQuestions() {
     if (!C.rec) return;
@@ -106,6 +115,7 @@
     if (s && s.type === 'student' && ['', 'courses', 'course', 'play', 'result', 'me', 'info', 'questions'].includes(page)) {
       await loadStudent(page === 'courses' || page === 'me');
       if (['courses', 'me', 'questions'].includes(page)) await loadMyQuestions();
+      if (page === 'courses') await loadBoard();
       if (page === 'course' || page === 'info') await loadCourse(arg);
       if (page === 'result') { const a = C.attempts.find((x) => x.id === arg); if (a) await loadCourse(a.courseId); }
     }
@@ -255,6 +265,7 @@
     myQuestions: () => C.myQ,
     adminQuestions: () => C.adminQ,
     questionsReady: () => C.qReady,
+    board: () => C.board || null, setBoardProfile,
     isV2, bankCount, bankTags, fetchQuestions, addStaff, removeStaff,
     role: () => C.role,
     staff: () => C.staff,

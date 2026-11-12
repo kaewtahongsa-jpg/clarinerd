@@ -67,6 +67,27 @@ window.Store = (() => {
   const attemptById = (id) => attempts().find((a) => a.id === id);
   const attemptsFor = (code) => attempts().filter((a) => a.code === code);
 
+  /* ---- กระดานอันดับ (คำนวณในเครื่อง ใช้สูตรเดียวกับ supabase/leaderboard.sql) ---- */
+  function xpOf(list) {
+    const best = {}, days = new Set();
+    list.forEach((a) => { const d = new Date(a.date), k = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); days.add(k); const key = a.courseId + '|' + a.setId + '|' + k; best[key] = Math.max(best[key] || 0, a.score); });
+    return Object.values(best).reduce((s, v) => s + v, 0) * 10 + days.size * 20;
+  }
+  function board() {
+    const s = session(); if (!s || s.type !== 'student') return null;
+    const wk = new Date(); wk.setHours(0, 0, 0, 0); wk.setDate(wk.getDate() - ((wk.getDay() + 6) % 7));
+    const me = findCode(s.code); if (!me) return null;
+    const pts = codes().filter((c) => c.active && (c.board !== false || c.code === me.code))
+      .map((c) => ({ code: c.code, name: c.nick || c.name.trim().split(' ')[0], xp: xpOf(attemptsFor(c.code).filter((a) => new Date(a.date) >= wk)) }))
+      .filter((p) => p.xp > 0).sort((a, b) => b.xp - a.xp);
+    pts.forEach((p, i) => { p.rk = i && pts[i - 1].xp === p.xp ? pts[i - 1].rk : i + 1; p.me = p.code === me.code; });
+    const m = pts.find((p) => p.me), above = m ? pts.filter((p) => p.xp > m.xp).map((p) => p.xp) : [];
+    const resets = new Date(wk); resets.setDate(resets.getDate() + 7);
+    return { top: pts.slice(0, 5).map(({ rk, name, xp, me: mine }) => ({ rk, name, xp, me: mine })), me: m ? { rk: m.rk, xp: m.xp, next: above.length ? Math.min(...above) : null } : null,
+      players: pts.length, total: xpOf(attemptsFor(me.code)), nick: me.nick || null, board: me.board !== false, resets: resets.toISOString() };
+  }
+  async function setBoardProfile(nick, show) { const s = session(); updateCode(s.code, { nick: String(nick || '').trim().slice(0, 20), board: !!show }); }
+
   /* ---- กล่องถามครู ---- */
   const allQuestions = () => read(K.questions, []);
   async function askQuestion(code, payload) {
@@ -102,5 +123,5 @@ window.Store = (() => {
   async function adminLogin(email, pw) { if (pw !== adminPw()) return { ok: false, reason: 'รหัสผ่านไม่ถูกต้อง' }; setSession({ type: 'admin' }); return { ok: true }; }
   async function logout() { setSession(null); }
 
-  return { remote, canUpload, prepare, login, adminLogin, logout, today, addDays, codes, findCode, checkCode, createCode, updateCode, deleteCode, attempts, addAttempt, attemptById, attemptsFor, session, setSession, adminPw, setAdminPw, exportAll, importAll, resetAll, askQuestion, myQuestions, markAnswersSeen, adminQuestions, answerQuestion, deleteQuestion };
+  return { board, setBoardProfile, remote, canUpload, prepare, login, adminLogin, logout, today, addDays, codes, findCode, checkCode, createCode, updateCode, deleteCode, attempts, addAttempt, attemptById, attemptsFor, session, setSession, adminPw, setAdminPw, exportAll, importAll, resetAll, askQuestion, myQuestions, markAnswersSeen, adminQuestions, answerQuestion, deleteQuestion };
 })();

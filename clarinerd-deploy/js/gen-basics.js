@@ -151,7 +151,8 @@
     const parts = fillBar(total);
     const ts = `${total}/4`;
     const pool = ['2/4', '3/4', '4/4'];
-    const wrong = [...pool.filter((x) => x !== ts), '6/8'];
+    // ห้อง 3 จังหวะมีเขบ็ตรวม 6 ตัวเท่ากับ 6/8 จึงไม่ใช้ 6/8 เป็นตัวลวง (กันโจทย์กำกวม)
+    const wrong = [...pool.filter((x) => x !== ts), total === 3 ? '5/4' : '6/8'];
     const sum = parts.map((p) => p.th).join(' + ');
     const why = wrong.map((w) => (w === '6/8' ? ['6/8 นับเป็นกลุ่มเขบ็ต 3 ตัว เป็นเรื่องที่ยากขึ้น ห้องนี้ใช้ตัวดำเป็นหน่วย', '6/8 counts in groups of three eighths; this bar is counted in quarter notes'] : [`${w} ต้องมี ${w[0]} จังหวะ แต่ห้องนี้มี ${total}`, `${w} needs ${w[0]} beats; this bar has ${total}`]));
     return {

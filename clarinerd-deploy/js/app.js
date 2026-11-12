@@ -14,20 +14,162 @@
   const getLang = () => { try { return localStorage.getItem('cn_lang') || 'th'; } catch (e) { return 'th'; } };
   const nl = (t) => esc(t).replace(/\n/g, '<br>');
   /** เฉลยแบบละเอียด (q.ex) — คำแปลโจทย์ · ไทย/English · ทำไมข้ออื่นผิด · จำง่าย · ภาพโน้ต */
+  /* ---------- คลังศัพท์: ทำให้ศัพท์ในเฉลยกดอ่านต่อได้ ---------- */
+  let GLRE = null, GLMAP = null;
+  const glById = (id) => (window.GLOSSARY || []).find((g) => g.id === id);
+  function glBuild() {
+    GLMAP = {}; const th = [], en = [];
+    (window.GLOSSARY || []).forEach((g) => (g.k || []).forEach((k) => { GLMAP[k.toLowerCase()] = g.id; (/^[\x20-\x7e]+$/.test(k) ? en : th).push(k); }));
+    const rx = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), byLen = (a, b) => b.length - a.length;
+    const parts = [];
+    if (th.length) parts.push(th.sort(byLen).map(rx).join('|'));
+    if (en.length) parts.push('\\b(?:' + en.sort(byLen).map(rx).join('|') + ')\\b');
+    GLRE = parts.length ? new RegExp(parts.join('|'), 'gi') : /$^/g;
+  }
+  /** html ต้องผ่าน esc มาแล้ว · used = ศัพท์ที่ลิงก์ไปแล้วในก้อนนี้ (ลิงก์แค่ครั้งแรก) */
+  function linkTerms(html, used) {
+    if (!window.GLOSSARY) return html;
+    if (!GLRE) glBuild();
+    return html.replace(GLRE, (m) => { const id = GLMAP[m.toLowerCase()]; if (!id || used.has(id)) return m; used.add(id); return `<button type="button" class="gl" data-gl="${id}">${m}</button>`; });
+  }
+  function openGloss(id) {
+    const g = glById(id); if (!g) return;
+    closeGloss();
+    const en = getLang() === 'en', used = new Set([id]);
+    const veil = document.createElement('div');
+    veil.className = 'gl-veil'; veil.id = 'glVeil';
+    veil.innerHTML = `<div class="gl-sheet" role="dialog" aria-modal="true" aria-label="${esc(g.t)}">
+      <button class="gl-x" data-act="gl-close" aria-label="ปิด">✕</button>
+      <p class="eyebrow">${esc(g.cat)}</p>
+      <h2>${esc(en ? g.e : g.t)}</h2><p class="gl-sub">${esc(en ? g.t : g.e)}</p>
+      ${g.n ? '<div class="staff" id="glStaff"></div>' : ''}
+      <p class="gl-body">${linkTerms(esc(en ? g.en : g.th), used).replace(/\n/g, '<br>')}</p>
+      ${g.rel.length ? `<p class="ex-h">${en ? 'Read next' : 'อ่านต่อ'}</p><p class="gl-rel">${g.rel.map((r) => { const x = glById(r); return x ? `<button type="button" data-gl="${x.id}">${esc(en ? x.e : x.t)} →</button>` : ''; }).join('')}</p>` : ''}
+      <p class="gl-foot"><a href="#/glossary" data-act="gl-close">${en ? 'All terms' : 'ดูคลังศัพท์ทั้งหมด'}</a></p>
+    </div>`;
+    document.body.appendChild(veil);
+    if (g.n) Music.renderStaff(document.getElementById('glStaff'), g.n);
+    veil.querySelector('.gl-sheet').scrollTop = 0;
+  }
+  function closeGloss() { const v = document.getElementById('glVeil'); if (v) v.remove(); }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeGloss(); });
+
   function explainHTML(q, withImages) {
-    const x = q.ex;
-    if (!x) return q.e ? `<p class="explain">${nl(q.e)}</p>` : '';
+    const x = q.ex, used = new Set();
+    const L = (t) => linkTerms(esc(t), used);
+    if (!x) return q.e ? `<p class="explain">${L(q.e).replace(/\n/g, '<br>')}</p>` : '';
     const lang = getLang(), en = lang === 'en' && x.en;
     return `<div class="ex">
       ${x.qAlt ? `<p class="ex-alt">${esc(x.qAlt)}</p>` : ''}
       <div class="ex-lang"><button class="${!en ? 'on' : ''}" data-lang="th">ไทย</button><button class="${en ? 'on' : ''}" data-lang="en">English</button></div>
-      <p class="explain">${nl(en ? x.en : (x.th || q.e || ''))}</p>
+      <p class="explain">${L(en ? x.en : (x.th || q.e || '')).replace(/\n/g, '<br>')}</p>
       ${withImages && x.img ? x.img.map((im, i) => `<figure class="ex-fig"><div class="staff ex-img" data-img="${i}"></div><figcaption>${esc(en && im.capEn ? im.capEn : im.cap || '')}</figcaption></figure>`).join('') : ''}
-      ${x.why && x.why.length && !en ? `<p class="ex-h">ทำไมตัวเลือกอื่นผิด</p><ul class="ex-why">${x.why.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
-      ${x.whyEn && x.whyEn.length && en ? `<p class="ex-h">Why the other choices are wrong</p><ul class="ex-why">${x.whyEn.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
-      ${x.tip ? `<p class="ex-tip"><b>${en ? 'Tip' : 'จำง่าย'}</b> ${esc(en && x.tipEn ? x.tipEn : x.tip)}</p>` : ''}
+      ${x.why && x.why.length && !en ? `<p class="ex-h">ทำไมตัวเลือกอื่นผิด</p><ul class="ex-why">${x.why.map((w) => `<li>${L(w)}</li>`).join('')}</ul>` : ''}
+      ${x.whyEn && x.whyEn.length && en ? `<p class="ex-h">Why the other choices are wrong</p><ul class="ex-why">${x.whyEn.map((w) => `<li>${L(w)}</li>`).join('')}</ul>` : ''}
+      ${x.tip ? `<p class="ex-tip"><b>${en ? 'Tip' : 'จำง่าย'}</b> ${L(en && x.tipEn ? x.tipEn : x.tip)}</p>` : ''}
+      ${used.size ? `<p class="gl-hint">${en ? 'Tap an underlined word to read more about it.' : 'กดคำที่ขีดเส้นใต้เพื่ออ่านเรื่องนั้นต่อได้'}</p>` : ''}
     </div>`;
   }
+  /* ---------- ฝึกต่อเนื่อง (streak) ---------- */
+  const dayKey = (d) => { d = new Date(d); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const dayBack = (n) => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d; };
+  /** list = attempts ของนักเรียนคนเดียว → { n: วันต่อเนื่อง, today: วันนี้ฝึกแล้วไหม, week: 7 วันล่าสุด, best, days: จำนวนวันที่เคยฝึก } */
+  function streakOf(list) {
+    const days = new Set(list.map((a) => dayKey(a.date)));
+    const today = days.has(dayKey(dayBack(0)));
+    let n = 0;
+    for (let i = today ? 0 : 1; days.has(dayKey(dayBack(i))); i++) n++;
+    const sorted = [...days].sort(); let best = 0, run = 0, prev = null;
+    sorted.forEach((k) => { const t = new Date(k + 'T12:00:00').getTime(); run = prev !== null && Math.round((t - prev) / 864e5) === 1 ? run + 1 : 1; best = Math.max(best, run); prev = t; });
+    const week = Array.from({ length: 7 }, (_, i) => { const d = dayBack(6 - i); return { on: days.has(dayKey(d)), label: 'อาจอพพฤศส'.match(/พฤ|อา|./g)[d.getDay()], today: i === 6 }; });
+    return { n, today, week, best, days: days.size };
+  }
+  /** ภารกิจประจำวัน — นับจากผลที่ทำวันนี้ */
+  function questsHTML(list) {
+    const td = dayKey(new Date()), today = list.filter((a) => dayKey(a.date) === td);
+    const right = today.reduce((n, a) => n + a.score, 0), high = today.some((a) => a.total >= 5 && a.score / a.total >= 0.8);
+    const qs = [['ทำแบบฝึกหัด 1 ชุด', today.length ? 1 : 0, 1], ['ตอบถูกรวม 15 ข้อ', Math.min(right, 15), 15], ['ได้ 80% ขึ้นไป 1 ชุด', high ? 1 : 0, 1]];
+    const done = qs.filter((q) => q[1] >= q[2]).length;
+    return `<div class="quests"><p class="ex-h">ภารกิจวันนี้ <span>${done}/3</span></p>
+      ${qs.map(([t, v, m]) => `<div class="quest ${v >= m ? 'ok' : ''}"><i>${v >= m ? '✓' : ''}</i><span>${t}</span><em>${m > 1 ? `${v}/${m}` : ''}</em></div>`).join('')}
+      ${done === 3 ? '<p class="small quest-all">ครบทั้ง 3 ภารกิจแล้ว เก่งมาก พรุ่งนี้มาเก็บใหม่อีกรอบ</p>' : ''}</div>`;
+  }
+  /** แต้มที่ได้จากการทำครั้งนี้ (สูตรเดียวกับกระดานอันดับ) */
+  function xpGain(a, list) {
+    const d = dayKey(a.date), t = new Date(a.date).getTime();
+    const before = list.filter((x) => x.id !== a.id && new Date(x.date).getTime() < t);
+    const sameDay = before.filter((x) => dayKey(x.date) === d), same = (x) => x.courseId === a.courseId && x.setId === a.setId;
+    const prevBest = Math.max(0, ...sameDay.filter(same).map((x) => x.score));
+    const earlier = before.filter((x) => same(x) && x.total);
+    return { pts: Math.max(0, a.score - prevBest) * 10, bonus: sameDay.length ? 0 : 20, repeat: sameDay.some(same),
+      pb: earlier.length > 0 && a.total > 0 && a.score / a.total > Math.max(...earlier.map((x) => x.score / x.total)) };
+  }
+  function gainHTML(a, list) {
+    const g = xpGain(a, list), sum = g.pts + g.bonus, k = streakOf(list);
+    return `<section class="card gain"><div class="gain-n"><b>+${sum}</b><span>แต้ม</span></div>
+      <div class="gain-body"><p class="chips">${g.pts ? `<span>ตอบถูก +${g.pts}</span>` : ''}${g.bonus ? '<span>ฝึกครั้งแรกของวัน +20</span>' : ''}${g.pb ? '<span class="hot">สถิติใหม่ของชุดนี้</span>' : ''}${k.today && k.n >= 2 ? `<span class="hot">ฝึกต่อเนื่อง ${k.n} วัน</span>` : ''}</p>
+        <p class="small muted">${g.repeat && !g.pts ? 'ชุดนี้ทำไปแล้ววันนี้ แต้มนับเฉพาะครั้งที่คะแนนดีที่สุด ลองชุดอื่นเพื่อเก็บแต้มเพิ่ม' : 'แต้มนี้ไปรวมในอันดับสัปดาห์นี้และระดับ (Rank) ของเธอ'} · <a href="#/courses">ดูอันดับ →</a></p></div></section>`;
+  }
+  function streakHTML(list) {
+    const k = streakOf(list);
+    const msg = !k.days ? 'ทำแบบฝึกหัดชุดแรกวันนี้ เพื่อเริ่มนับวันฝึกต่อเนื่อง'
+      : k.today ? (k.n >= 2 ? `ฝึกครบแล้ววันนี้ ต่อเนื่องมา ${k.n} วัน พรุ่งนี้มาต่ออีกนะ` : 'วันนี้ฝึกแล้ว พรุ่งนี้กลับมาอีกเพื่อต่อเป็น 2 วัน')
+      : k.n ? `วันนี้ยังไม่ได้ฝึก ทำ 1 ชุดเพื่อรักษาสถิติ ${k.n} วันไว้` : 'สถิติหลุดไปแล้ว ทำ 1 ชุดวันนี้เพื่อเริ่มนับใหม่';
+    return `<section class="card streak ${k.today ? 'done' : ''}">
+      <div class="streak-n"><b>${k.n}</b><span>วันต่อเนื่อง</span></div>
+      <div class="streak-body"><p>${esc(msg)}</p>
+        <div class="streak-week">${k.week.map((d) => `<i class="${d.on ? 'on' : ''} ${d.today ? 'today' : ''}"><em>${d.label}</em></i>`).join('')}</div>
+        ${k.best > k.n ? `<p class="small muted">สถิติดีที่สุด ${k.best} วัน · ฝึกมาแล้วทั้งหมด ${k.days} วัน</p>` : k.days ? `<p class="small muted">ฝึกมาแล้วทั้งหมด ${k.days} วัน</p>` : ''}</div>
+      ${questsHTML(list)}
+    </section>`;
+  }
+
+  /* ---------- ระดับ (Rank) และกระดานอันดับรายสัปดาห์ ---------- */
+  const TIERS = [[0, 'Largo', 'ช้ามาก'], [300, 'Adagio', 'ช้า'], [800, 'Andante', 'ความเร็วเดิน'], [1600, 'Moderato', 'ปานกลาง'], [3000, 'Allegro', 'เร็ว'], [5000, 'Vivace', 'เร็ว มีชีวิตชีวา'], [8000, 'Presto', 'เร็วมาก']];
+  function tierOf(xp) {
+    let i = 0; while (i < TIERS.length - 1 && xp >= TIERS[i + 1][0]) i++;
+    const next = TIERS[i + 1] || null;
+    return { i, name: TIERS[i][1], th: TIERS[i][2], next, pct: next ? Math.round(((xp - TIERS[i][0]) / (next[0] - TIERS[i][0])) * 100) : 100, left: next ? next[0] - xp : 0 };
+  }
+  const fmtN = (n) => Number(n || 0).toLocaleString('en-US');
+  function boardHTML(rec) {
+    const b = Store.board ? Store.board() : null;
+    if (!b) return '';
+    const t = tierOf(b.total || 0), me = b.me, top = b.top || [];
+    const days = Math.max(1, Math.ceil((new Date(b.resets) - Date.now()) / 864e5));
+    const inTop = top.some((x) => x.me);
+    const gap = me && me.next ? me.next - me.xp + 10 : 0;
+    const status = !me ? 'สัปดาห์นี้ยังไม่มีแต้ม ทำ 1 ชุดเพื่อขึ้นกระดาน'
+      : me.rk === 1 ? 'นำอยู่อันดับ 1 รักษาไว้ให้ถึงวันอาทิตย์'
+      : `อยู่อันดับ ${me.rk} จาก ${b.players} คน · อีก ${fmtN(gap)} แต้ม (ตอบถูก ${Math.ceil(gap / 10)} ข้อ) จะแซงคนข้างหน้า`;
+    return `<section class="card rank" id="rankCard">
+      <div class="rank-tier t${t.i}">
+        <div class="rank-badge"><span>RANK</span><b>${t.name}</b><i>${t.th}</i></div>
+        <div class="rank-prog"><p><b>${fmtN(b.total)}</b> แต้มสะสม</p>
+          <div class="progress"><i style="width:${t.pct}%"></i></div>
+          <p class="small muted">${t.next ? `อีก ${fmtN(t.left)} แต้ม ขึ้นระดับ ${t.next[1]}` : 'ถึงระดับสูงสุดแล้ว'}</p></div>
+      </div>
+      <div class="rank-head"><h2>อันดับสัปดาห์นี้</h2><span class="small muted">เริ่มนับใหม่ทุกวันจันทร์ · เหลือ ${days} วัน</span></div>
+      ${top.length ? `<ol class="rank-list">${top.map((x) => `<li class="${x.me ? 'me' : ''} r${x.rk}"><span class="rk">${x.rk}</span><span class="nm">${esc(x.name)}${x.me ? ' <em>(ฉัน)</em>' : ''}</span><span class="xp">${fmtN(x.xp)}</span></li>`).join('')}
+        ${me && !inTop ? `<li class="gap">⋯</li><li class="me"><span class="rk">${me.rk}</span><span class="nm">${esc(b.nick || rec.name.trim().split(' ')[0])} <em>(ฉัน)</em></span><span class="xp">${fmtN(me.xp)}</span></li>` : ''}</ol>` : '<p class="muted">ยังไม่มีใครขึ้นกระดานสัปดาห์นี้ เป็นคนแรกได้เลย</p>'}
+      <p class="rank-status">${esc(status)}</p>
+      <details class="rank-set"><summary>วิธีได้แต้ม และตั้งชื่อบนกระดาน</summary>
+        <p class="small muted">ตอบถูก 1 ข้อ = 10 แต้ม · ฝึกวันไหนได้เพิ่มวันละ 20 แต้ม · ทำชุดเดิมซ้ำในวันเดียวกัน นับครั้งที่คะแนนดีที่สุด<br>ระดับ (Rank) ใช้ชื่อศัพท์ความเร็วจากช้าไปเร็ว: ${TIERS.map((x) => x[1]).join(' → ')}</p>
+        <form id="boardForm" class="row"><input id="boardNick" maxlength="20" placeholder="ชื่อบนกระดาน" value="${esc(b.nick || '')}">
+          <label class="small"><input type="checkbox" id="boardShow" ${b.board !== false ? 'checked' : ''}> แสดงชื่อฉันบนกระดาน</label>
+          <button class="btn">บันทึก</button></form>
+        <p class="small muted">ถ้าไม่ตั้งชื่อ ระบบใช้ชื่อแรกที่ครูลงทะเบียนไว้ เพื่อนเห็นแค่ชื่อกับแต้มรวม ไม่เห็นคะแนนรายชุด</p>
+      </details>
+    </section>`;
+  }
+  document.addEventListener('submit', async (e) => {
+    if (e.target.id !== 'boardForm') return;
+    e.preventDefault();
+    const btn = e.target.querySelector('.btn'); btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+    try { await Store.setBoardProfile(document.getElementById('boardNick').value, document.getElementById('boardShow').checked); route(); }
+    catch (x) { btn.disabled = false; btn.textContent = 'บันทึกไม่สำเร็จ ลองใหม่'; }
+  });
+
   /* ---------- กล่องถามครู ---------- */
   const ASK = {};            // key → ข้อมูลโจทย์ที่จะส่งไปพร้อมคำถาม
   const ASKED = new Set();   // ข้อที่ส่งคำถามไปแล้วในรอบนี้
@@ -82,6 +224,7 @@
 
   let timerId = null;
   let PLAY = null;
+  let FOLLOW = {}; // รหัส → ข้อความทักตาม (หน้าครู)
 
   /* ---------------- ส่วนหัว ---------------- */
   const LOGO = `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="13" y="3" width="6" height="22" rx="2" fill="currentColor"/><path d="M10 25h12l-2 5h-8z" fill="currentColor"/><circle cx="16" cy="9" r="1.6" fill="var(--paper)"/><circle cx="16" cy="14" r="1.6" fill="var(--paper)"/><circle cx="16" cy="19" r="1.6" fill="var(--paper)"/></svg>`;
@@ -96,7 +239,7 @@
   }
   function studentNav(rec) {
     const unread = Store.myQuestions ? Store.myQuestions(rec.code).filter((q) => q.answer && !q.seen).length : 0;
-    return header(`<a href="#/courses">คอร์ส</a><a href="#/me">ผลของฉัน</a><a href="#/questions">ถามครู${unread ? `<span class="badge">${unread}</span>` : ''}</a><span class="who">${esc(rec.name)}</span><button class="link" data-act="logout">ออก</button>`);
+    return header(`<a href="#/courses">คอร์ส</a><a href="#/me">ผลของฉัน</a><a href="#/glossary">คลังศัพท์</a><a href="#/questions">ถามครู${unread ? `<span class="badge">${unread}</span>` : ''}</a><span class="who">${esc(rec.name)}</span><button class="link" data-act="logout">ออก</button>`);
   }
   function adminNav(active) {
     const t = (id, label) => `<a href="#/admin/${id}" class="${active === id ? 'on' : ''}">${label}</a>`;
@@ -152,12 +295,7 @@
         </section>
         <section class="shelf">
           <h2>คอร์สที่เปิดสอน</h2>
-          <div class="posters">
-            <div class="poster" style="--c:#ff7a1a"><span>Start here</span><b>พื้นฐาน<br>ดนตรี</b><i>เริ่มจากศูนย์ อ่านโน้ต จังหวะ ชาร์ป–แฟลต</i></div>
-            <div class="poster" style="--c:#e8115b"><span>TCAS</span><b>TPAT22<br>ดนตรี</b><i>ตามโครงสร้างข้อสอบล่าสุด ทั้งสากลและไทย</i></div>
-            <div class="poster" style="--c:#2d6cf6"><span>Theory</span><b>ABRSM<br>Grade 5</b><i>โจทย์ภาษาอังกฤษ เฉลยสองภาษา</i></div>
-            <div class="poster" style="--c:#8b5cf6"><span>Audition</span><b>สอบตรง<br>คณะดนตรี</b><i>ทฤษฎี โสตทักษะ และเตรียมสอบปฏิบัติ</i></div>
-          </div>
+          <div class="posters">${POSTERS.map(([id, k, big, sub]) => `<a class="poster" href="#/preview/${id}" style="--c:${PREVIEW[id].color}"><span>${k}</span><b>${big}</b><i>${sub}</i><u>ดูตัวอย่าง →</u></a>`).join('')}</div>
         </section>
         <section class="yt">
           <div><h2>ดูคลิปสอนคลาริเน็ตบน YouTube</h2><p>เทคนิคการเป่า สเกล และเรื่องการเตรียมสอบ — ช่อง Clarinerd (@Clarinerdth)</p></div>
@@ -234,6 +372,7 @@
       <main>
         <div class="page-head"><p class="eyebrow">ห้องเรียนของฉัน</p><h1>สวัสดี ${esc(rec.name)}</h1>
         <p class="muted">เลือกคอร์สที่ต้องการเรียน ${rec.expires ? `· รหัสใช้ได้ถึง ${fmtDate(rec.expires)}` : ''}</p></div>
+        <div class="dash">${streakHTML(Store.attemptsFor(rec.code))}${boardHTML(rec)}</div>
         <div class="grid courses">${cards}</div>
       </main>${footer()}`;
   }
@@ -549,6 +688,7 @@
           <h1>${a.score} / ${a.total} คะแนน</h1><p>${msg}</p><p class="small muted">ใช้เวลา ${fmtDur(a.durSec)} นาที</p>
           <div class="row"><button class="btn primary" data-play="${a.courseId}|${a.setId}|${a.mode}">ทำอีกครั้ง</button>${weakTags(rec.code, a.courseId).length ? `<button class="btn" data-play="${a.courseId}|weak|practice">ฝึกจุดอ่อน</button>` : ''}<a class="btn ghost" href="#/course/${a.courseId}">เลือกชุดอื่น</a></div></div>
         </section>
+        ${gainHTML(a, Store.attemptsFor(rec.code))}
         <section class="card"><h2>คะแนนแยกตามหัวข้อ</h2>${breakdownHTML(a.items)}</section>
         <section class="card"><h2>ทบทวนคำตอบ</h2>
           <label class="toggle"><input type="checkbox" id="onlyWrong"> แสดงเฉพาะข้อที่ผิด</label>
@@ -562,6 +702,7 @@
     const list = Store.attemptsFor(rec.code).slice().reverse();
     $app.innerHTML = `${studentNav(rec)}
       <main><div class="page-head"><h1>ผลของฉัน</h1><p class="muted">ทำไปแล้ว ${list.length} ครั้ง</p></div>
+      ${streakHTML(list)}
       ${list.length ? `<section class="card"><table class="tbl"><thead><tr><th>วันที่</th><th>ชุด</th><th>โหมด</th><th>คะแนน</th></tr></thead><tbody>
         ${list.map((a) => `<tr class="click" data-href="#/result/${a.id}"><td>${fmtDateTime(a.date)}</td><td>${esc(courseById(a.courseId)?.short || '')} · ${esc(a.setTitle)}</td><td>${a.mode === 'exam' ? 'สอบ' : 'ฝึก'}</td><td><span class="score-pill ${scoreClass(pct(a.score, a.total))}">${a.score}/${a.total}</span></td></tr>`).join('')}
       </tbody></table></section>` : '<section class="card empty">ยังไม่มีผล ลองเริ่มทำแบบฝึกหัดชุดแรกได้เลย <a href="#/courses">ไปที่คอร์ส →</a></section>'}
@@ -684,7 +825,7 @@
           <div class="row between"><h2>รายชื่อทั้งหมด (${list.length})</h2><input id="q" class="search" placeholder="ค้นหาชื่อหรือรหัส"></div>
           <div class="tbl-wrap"><table class="tbl" id="codeTbl"><thead><tr><th>ชื่อ</th>${tCol ? '<th>ครู</th>' : ''}<th>รหัส</th><th>คอร์ส</th><th>ใช้ได้ถึง</th><th>สถานะ</th><th>ทำแล้ว</th><th></th></tr></thead><tbody>
           ${list.map((c) => `<tr data-row="${esc((c.name + ' ' + c.code).toLowerCase())}">
-            <td><b>${esc(c.name)}</b>${c.note ? `<br><span class="small muted">${esc(c.note)}</span>` : ''}</td>
+            <td><b>${esc(c.name)}</b>${c.nick ? `<br><span class="small muted">ชื่อบนกระดาน: ${esc(c.nick)}</span>` : ''}${c.note ? `<br><span class="small muted">${esc(c.note)}</span>` : ''}</td>
             ${tCol ? `<td class="small">${esc(staffName(c.teacherId))}</td>` : ''}
             <td><code>${esc(c.code)}</code></td>
             <td>${COURSES.map((x) => `<label class="mini"><input type="checkbox" data-course="${esc(c.code)}|${x.id}" ${c.courses.includes(x.id) ? 'checked' : ''}>${esc(x.short)}</label>`).join('')}</td>
@@ -754,9 +895,24 @@
       return { c, n: mine.length, p: tot ? pct(sc, tot) : null, weak, last };
     }).sort((a, b) => (b.last || '').localeCompare(a.last || ''));
     const recent = att.slice(-15).reverse();
+    const todayStr = Store.today(), noon = (k) => new Date(k + 'T12:00:00').getTime(), nowDay = noon(dayKey(new Date()));
+    const away = rows.filter((r) => r.c.active !== false && (!r.c.expires || r.c.expires >= todayStr)).map((r) => {
+      const from = r.last ? dayKey(r.last) : (r.c.created || null);
+      return { ...r, gone: from ? Math.round((nowDay - noon(from)) / 864e5) : null, streak: streakOf(att.filter((a) => a.code === r.c.code)).n };
+    }).filter((r) => r.gone !== null && r.gone >= 3).sort((a, b) => a.gone - b.gone);
+    FOLLOW = {};
+    away.forEach((r) => { FOLLOW[r.c.code] = r.last
+      ? `สวัสดี ${r.c.name} ไม่ได้เข้ามาฝึกใน Clarinerd ${r.gone} วันแล้วนะ วันนี้ลองทำสัก 1 ชุดก็พอ ใช้เวลาประมาณ 10 นาที${r.weak.length ? ' ดรีมแนะนำเรื่อง “' + r.weak[0] + '” ที่ยังพลาดบ่อย' : ''}\nเข้าได้ที่ ${location.origin.includes('localhost') ? 'https://clarinerd.netlify.app' : location.origin} ด้วยรหัสเดิม ติดตรงไหนกดถามครูใต้เฉลยได้เลย`
+      : `สวัสดี ${r.c.name} รหัสเข้า Clarinerd ที่ดรีมส่งให้ยังไม่ได้ลองใช้เลยนะ ลองเข้าไปทำชุดแรกดู ใช้เวลาประมาณ 10 นาที\nเข้าได้ที่ ${location.origin.includes('localhost') ? 'https://clarinerd.netlify.app' : location.origin} รหัส ${r.c.code} ติดตรงไหนทักดรีมได้เลย`; });
+    const followCard = `<section class="card"><h2>ควรทักตาม <span class="badge">${away.length}</span></h2>
+      <p class="muted small">นักเรียนที่รหัสยังใช้ได้ แต่ไม่ได้เข้ามาฝึก 3 วันขึ้นไป กด “คัดลอกข้อความ” แล้วไปวางใน LINE ของนักเรียนได้เลย</p>
+      ${away.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>หายไป</th><th>ฝึกล่าสุด</th><th>ควรทบทวน</th><th></th></tr></thead><tbody>
+        ${away.map((r) => `<tr><td><b>${esc(r.c.name)}</b><br><code class="small">${esc(r.c.code)}</code></td><td><span class="score-pill ${r.gone >= 7 ? 'low' : 'mid'}">${r.gone} วัน</span></td><td class="small">${r.last ? fmtDateTime(r.last) : 'ยังไม่เคยเข้า'}</td><td>${r.weak.map((w) => `<span class="tag warn">${esc(w)}</span>`).join(' ') || '<span class="muted">—</span>'}</td><td><button class="btn" data-act="copy-follow" data-code="${esc(r.c.code)}">คัดลอกข้อความ</button></td></tr>`).join('')}
+      </tbody></table></div>` : '<p class="muted">ไม่มีใครหายไปเกิน 3 วัน</p>'}</section>`;
     $app.innerHTML = `${adminNav('results')}
       <main>
         <div class="page-head"><h1>ผลคะแนนนักเรียน</h1><p class="muted">ทั้งหมด ${att.length} ครั้ง จากนักเรียน ${codes.length} คน</p></div>
+        ${followCard}
         <section class="card"><h2>ภาพรวมรายคน</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>ทำแล้ว</th><th>คะแนนเฉลี่ย</th><th>หัวข้อที่ควรทบทวน</th><th>ล่าสุด</th></tr></thead><tbody>
           ${rows.map((r) => `<tr class="click" data-href="#/admin/student/${encodeURIComponent(r.c.code)}"><td><b>${esc(r.c.name)}</b><br><code class="small">${esc(r.c.code)}</code></td><td>${r.n} ครั้ง</td>
             <td>${r.p === null ? '—' : `<span class="score-pill ${scoreClass(r.p)}">${r.p}%</span>`}</td><td>${r.weak.map((w) => `<span class="tag warn">${esc(w)}</span>`).join(' ') || '<span class="muted">—</span>'}</td><td>${r.last ? fmtDateTime(r.last) : '—'}</td></tr>`).join('')}
@@ -958,12 +1114,143 @@
     if (rs) rs.onclick = () => { if (confirm('ล้างรหัสนักเรียนและคะแนนทั้งหมด? (ย้อนกลับไม่ได้)')) { Store.resetAll(); go('#/'); } };
   }
 
+
+  /* =========================================================
+     หน้าตัวอย่างคอร์ส (เปิดดูได้โดยไม่ต้องมีรหัส)
+     ========================================================= */
+  const PREVIEW = {
+    basics: { kicker: 'Start here', title: 'พื้นฐานดนตรี 0 → เริ่มเรียน', color: '#ff7a1a',
+      who: 'คนที่ยังอ่านโน้ตไม่เป็น หรืออยากปูพื้นใหม่ให้แน่นก่อนเรียนทฤษฎีและเครื่องดนตรี',
+      topics: ['บรรทัด 5 เส้นและระดับเสียง', 'ชื่อโน้ตกุญแจซอล', 'ชื่อโน้ตกุญแจฟา', 'ค่าโน้ตและตัวหยุด', 'อัตราจังหวะและห้องเพลง', 'ชาร์ป แฟลต เนเชอรัล', 'บันไดเสียงและขั้นคู่', 'เครื่องหมายและศัพท์ดนตรี'],
+      get: ['สรุปบทเรียนทุกบท อ่านจบแล้วทำแบบฝึกหัดของบทนั้นได้ทันที', 'คลังข้อสอบ 60 ข้อ และโจทย์อ่านโน้ตที่สุ่มสร้างใหม่ทุกครั้ง ฝึกได้ไม่จำกัด', 'ทุกข้อมีภาพโน้ตและเฉลยเป็นขั้นตอน'] },
+    tpat22: { kicker: 'TCAS', title: 'TPAT22 ความถนัดดนตรี', color: '#e8115b',
+      who: 'นักเรียน ม.ปลาย ที่จะสอบ TPAT22 เพื่อยื่นคณะดนตรีและคณะที่ใช้คะแนนนี้',
+      topics: ['จังหวะ', 'ทำนองและบันไดเสียง', 'เสียงประสาน', 'รูปพรรณและสีสันของเสียง', 'รูปแบบและสังคีตลักษณ์', 'ประวัติและวรรณกรรมดนตรี', 'เครื่องดนตรีสากลและไทย', 'ดนตรีไทย', 'ดนตรีกับสังคม'],
+      get: ['คลังข้อสอบกว่า 180 ข้อ ครอบคลุมทั้งดนตรีสากลและดนตรีไทย', 'จัดหัวข้อตามองค์ประกอบดนตรีในโครงสร้างข้อสอบ', 'โหมดสอบจับเวลา และโหมดฝึกที่เฉลยทันทีทีละข้อ'] },
+    abrsm: { kicker: 'Theory', title: 'ABRSM Music Theory Grade 5', color: '#2d6cf6',
+      who: 'คนที่เตรียมสอบ ABRSM Theory Grade 5 ซึ่งต้องผ่านก่อนสอบปฏิบัติ Grade 6 ขึ้นไป',
+      topics: ['Rhythm & metre', 'Clefs & pitch', 'Transposition', 'Keys & scales', 'Intervals', 'Chords & cadences', 'Terms & signs', 'Instruments'],
+      get: ['โจทย์ภาษาอังกฤษตามแนวข้อสอบจริง มีคำแปลโจทย์ให้', 'เฉลยสลับอ่านได้ทั้งไทยและอังกฤษ เพื่อคุ้นศัพท์ที่ใช้ในห้องสอบ', 'คลังข้อสอบ 99 ข้อ และโจทย์สุ่มเรื่องกุญแจเสียง ขั้นคู่ และการทดเสียง'] },
+    uni: { kicker: 'Audition', title: 'สอบตรงคณะดนตรี', color: '#8b5cf6',
+      who: 'คนที่จะสอบเข้าคณะดนตรีหรือดุริยางคศาสตร์ ซึ่งมีข้อเขียนทฤษฎีและประวัติดนตรีระดับสูงกว่า TPAT',
+      topics: ['การประสานเสียง 4 แนว', 'โน้ตนอกคอร์ด', 'คอร์ดและการดำเนินคอร์ด', 'การเปลี่ยนกุญแจเสียง', 'บันไดเสียงและโหมด', 'สังคีตลักษณ์', 'การอ่านสกอร์และการทดเสียง', 'ประวัติดนตรีตะวันตก', 'โสตทักษะ'],
+      get: ['ทฤษฎีระดับมหาวิทยาลัยปี 1 พร้อมภาพโน้ตประกอบเฉลย', 'แบบฝึกโสตทักษะที่กดฟังเสียงได้ในเว็บ', 'ข้อมูลการเตรียมสอบปฏิบัติและสิ่งที่กรรมการมักดู'] },
+  };
+  PREVIEW.abrsm14 = { kicker: 'Theory', title: 'ทฤษฎีดนตรี ABRSM Grade 1–4', color: '#14b8a6',
+    who: 'คนที่เริ่มสอบ ABRSM Theory ตั้งแต่เกรดต้น หรืออยากไล่พื้นฐานให้ครบก่อนขึ้น Grade 5',
+    topics: ['Note values & time signatures', 'Notes in treble, bass and alto clefs', 'Keys & scales', 'Intervals', 'Tonic triads & chords I IV V', 'Terms & signs', 'Ornaments & instruments'],
+    get: ['แบ่งเนื้อหาตามเกรด 1 ถึง 4 ไล่ระดับความยากขึ้นทีละขั้น', 'โจทย์ภาษาอังกฤษตามหลักสูตรจริง เฉลยอ่านได้ทั้งไทยและอังกฤษ', 'โจทย์สุ่มทุกเกรด ฝึกได้ไม่จำกัด และข้อสอบย่อยจับเวลา'] };
+  PREVIEW.ear = { kicker: 'Aural', title: 'ฝึกหู (Ear Training)', color: '#ec4899',
+    who: 'คนที่อยากฟังออกว่าเสียงสูงหรือต่ำ ขั้นคู่อะไร คอร์ดอะไร ทั้งมือใหม่และคนเตรียมสอบโสตทักษะ',
+    topics: ['สูง–ต่ำ และทิศทางทำนอง', 'นับจำนวนเสียง', 'ทีละขั้นหรือกระโดด', 'คอร์ดเมเจอร์–ไมเนอร์', 'ขั้นคู่', 'บันไดเสียงและเคเดนซ์', 'จังหวะและอัตราจังหวะ'],
+    get: ['กดฟังเสียงในเว็บได้เลย ฟังซ้ำกี่รอบก็ได้', 'ทุกข้อสุ่มเสียงใหม่ทุกครั้ง ไม่มีทางจำคำตอบได้', 'ไล่จากง่ายมาก (สูงหรือต่ำ) ไปถึงระดับสอบเข้า'],
+    gen: [['eHighLow', 'ง่าย'], ['eCount', 'ง่าย'], ['eContour', 'กลาง'], ['eMajorMinor', 'กลาง'], ['eIntervalBasic', 'ยาก']] };
+  PREVIEW.clarinet = { kicker: 'Clarinet', title: 'คลาริเน็ต: รู้จักเครื่องและทฤษฎีที่ต้องใช้', color: '#f59e0b',
+    who: 'นักเรียนคลาริเน็ตทุกระดับ ที่อยากเข้าใจเครื่องของตัวเอง การทดเสียง และประวัติเครื่อง',
+    topics: ['ส่วนประกอบและการดูแลเครื่อง', 'ลิ้น รูปปาก และการหายใจ', 'ช่วงเสียงและ the break', 'คู่ 12 และ register key', 'การทดเสียง B♭ / A / E♭', 'ครอบครัวคลาริเน็ต', 'ประวัติและบทเพลงสำคัญ'],
+    get: ['เนื้อหาที่ครูคลาริเน็ตเขียนเองจากสิ่งที่นักเรียนมักสงสัย', 'โจทย์สุ่มเรื่องช่วงเสียง คู่ 12 และการทดเสียง พร้อมภาพโน้ต', 'ใช้ทบทวนก่อนสอบปฏิบัติที่มีถามความรู้เรื่องเครื่อง'] };
+  const POSTERS = [['basics', 'Start here', 'พื้นฐาน<br>ดนตรี', 'เริ่มจากศูนย์ อ่านโน้ต จังหวะ ชาร์ป–แฟลต'], ['tpat22', 'TCAS', 'TPAT22<br>ดนตรี', 'ตามโครงสร้างข้อสอบล่าสุด ทั้งสากลและไทย'],
+    ['abrsm14', 'Theory', 'ABRSM<br>Grade 1–4', 'ไล่ทีละเกรด โจทย์อังกฤษ เฉลยสองภาษา'], ['abrsm', 'Theory', 'ABRSM<br>Grade 5', 'โจทย์ภาษาอังกฤษ เฉลยสองภาษา'],
+    ['ear', 'Aural', 'ฝึกหู', 'กดฟังเสียงในเว็บ สุ่มใหม่ทุกครั้ง'], ['uni', 'Audition', 'สอบตรง<br>คณะดนตรี', 'ทฤษฎี โสตทักษะ และเตรียมสอบปฏิบัติ'],
+    ['clarinet', 'Clarinet', 'คลาริเน็ต', 'รู้จักเครื่อง การทดเสียง และประวัติ']];
+  /** สารบัญบทเรียนของคอร์ส (หัวข้อ + คำอธิบายสั้น) — มาจากโครงสร้างคอร์สที่เปิดสาธารณะอยู่แล้ว ไม่มีเนื้อหาบทเรียน */
+  function outlineHTML(id) {
+    const c = courseById(id), units = (c && c.units) || [];
+    if (!units.length) return '';
+    const nSets = units.reduce((n, u) => n + (u.sets || []).length, 0);
+    return `<section class="card"><h2>สารบัญบทเรียน</h2><p class="muted small">${units.length} บท · ${nSets} ชุดฝึก · เนื้อหาเต็มและแบบฝึกหัดทุกชุดเปิดเมื่อมีรหัส</p>
+      <ol class="pv-outline">${units.map((u, i) => `<li><span class="n">${i + 1}</span><div><b>${esc(u.title)}</b>${u.desc ? `<p>${esc(u.desc)}</p>` : ''}<p class="small muted">${u.hasLesson || u.lesson ? 'สรุปบทเรียน · ' : ''}${(u.sets || []).length} ชุดฝึก</p></div><span class="lock" aria-label="ต้องมีรหัส">🔒</span></li>`).join('')}</ol></section>`;
+  }
+  let PV = null; // { id, qs, resp }
+  const LV = { 'ง่าย': 'easy', 'กลาง': 'mid', 'ยาก': 'hard' };
+  function pvCardHTML(q, i) {
+    const r = PV.resp[i], done = r !== null;
+    const choices = q.choices.map((ch, j) => {
+      const cls = !done ? '' : j === q.answer ? 'right' : j === r ? 'wrong' : 'dim';
+      return `<button class="choice ${cls}" data-pv="${i}|${j}" ${done ? 'disabled' : ''}><span class="letter">${'กขคง'[j] || j + 1}</span><span>${esc(ch)}</span></button>`;
+    }).join('');
+    return `<span class="tag lv ${LV[q.lv] || ''}">ระดับ${esc(q.lv)}</span> <span class="tag">${esc(q.tag)}</span>
+      <h3>${i + 1}. ${esc(q.q)}</h3>
+      ${q.notation ? '<div class="staff pv-staff"></div>' : ''}
+      ${q.audio ? `<div class="audio-box"><button class="btn audio" data-act="pv-listen" data-i="${i}">▶ ฟังเสียง</button><span class="small muted">กดฟังซ้ำได้</span></div>` : ''}
+      <div class="choices">${choices}</div>
+      ${done ? `<div class="feedback ${r === q.answer ? 'ok' : 'no'}"><b>${r === q.answer ? '✓ ถูกต้อง!' : '✗ ยังไม่ถูก คำตอบคือ “' + esc(q.choices[q.answer]) + '”'}</b>${explainHTML(q, true)}</div>` : ''}`;
+  }
+  function pvDraw(i) {
+    const el = document.getElementById('pv' + i), q = PV.qs[i]; if (!el) return;
+    el.innerHTML = pvCardHTML(q, i);
+    const st = el.querySelector('.pv-staff'); if (st) Music.renderStaff(st, q.notation);
+    if (q.ex && q.ex.img) el.querySelectorAll('.ex-img').forEach((x) => { const im = q.ex.img[+x.dataset.img]; if (im) Music.renderStaff(x, im.n); });
+    const n = PV.resp.filter((x) => x !== null).length, ok = PV.resp.filter((x, k) => x === PV.qs[k].answer).length;
+    const sc = document.getElementById('pvScore');
+    if (sc) sc.textContent = n ? `ทำแล้ว ${n}/${PV.qs.length} ข้อ · ถูก ${ok} ข้อ` : '';
+  }
+  function pagePreview(id) {
+    const m = PREVIEW[id];
+    const src = m && (m.gen ? (PV && PV.id === id ? PV.src : m.gen.map(([g, lv]) => ({ ...Music.GEN[g](), lv }))) : (window.SAMPLES || {})[id]);
+    if (!m || !src) return go('#/');
+    if (!PV || PV.id !== id) PV = { id, src, qs: src.map(prepare), resp: src.map(() => null) };
+    $app.innerHTML = `${header('<a href="#/">← หน้าแรก</a><a href="#/glossary">คลังศัพท์</a>')}
+      <main class="preview" style="--c:${m.color}">
+        <section class="pv-hero"><p class="eyebrow">${esc(m.kicker)} · ตัวอย่างคอร์ส</p><h1>${esc(m.title)}</h1>
+          <p class="lead"><b>เหมาะกับ</b> ${esc(m.who)}</p></section>
+        <div class="pv-cols">
+          <section class="card"><h2>เรียนอะไรบ้าง</h2><p class="chips">${m.topics.map((t) => `<span>${esc(t)}</span>`).join('')}</p></section>
+          <section class="card"><h2>ในคอร์สมีอะไร</h2><ul class="pv-get">${m.get.map((t) => `<li>${esc(t)}</li>`).join('')}<li>ตอบผิดเรื่องไหน ระบบเพิ่มโจทย์เรื่องนั้นให้ฝึกซ้ำ และครูเห็นคะแนนเพื่อช่วยดูว่าควรฝึกอะไรต่อ</li></ul></section>
+        </div>
+        ${outlineHTML(id)}
+        <div class="page-head"><h2>ลองทำ ${src.length} ข้อ</h2><p class="muted">มีทั้งข้อง่าย กลาง และยาก กดตอบแล้วจะเห็นเฉลยแบบเดียวกับที่นักเรียนเห็นในคอร์ส <span id="pvScore" class="pv-score"></span></p></div>
+        ${PV.qs.map((q, i) => `<article class="card question pv-q" id="pv${i}"></article>`).join('')}
+        <section class="trial pv-cta"><div><b>อยากทำต่อทั้งคอร์ส?</b> ทดลองใช้ฟรี 7 วัน ทัก LINE บอกว่าอยากลองคอร์ส “${esc(m.title)}” แล้วดรีมจะส่งรหัสให้</div>
+          <a class="btn primary" href="${LINE}" target="_blank" rel="noopener">ทัก LINE k.kaewta19</a></section>
+      </main>${footer()}`;
+    PV.qs.forEach((_, i) => pvDraw(i));
+  }
+
+  /* =========================================================
+     คลังศัพท์
+     ========================================================= */
+  function pageGlossary() {
+    const s = Store.session(), isStu = s && s.type === 'student';
+    const en = getLang() === 'en', cats = [];
+    (window.GLOSSARY || []).forEach((g) => { let c = cats.find((x) => x.name === g.cat); if (!c) cats.push(c = { name: g.cat, items: [] }); c.items.push(g); });
+    $app.innerHTML = `${header(isStu ? '<a href="#/courses">← กลับไปคอร์ส</a>' : '<a href="#/">← หน้าแรก</a>')}
+      <main>
+        <div class="page-head"><p class="eyebrow">Glossary</p><h1>คลังศัพท์ดนตรี</h1>
+          <p class="muted">ศัพท์ที่เจอในโจทย์และเฉลย กดที่คำเพื่ออ่านคำอธิบาย ภาพโน้ต และเรื่องที่ควรอ่านต่อ</p>
+          <div class="ex-lang"><button class="${!en ? 'on' : ''}" data-lang="th">ไทย</button><button class="${en ? 'on' : ''}" data-lang="en">English</button></div>
+          <input id="glSearch" type="search" placeholder="ค้นหาศัพท์ เช่น ขั้นคู่, cadence" autocomplete="off"></div>
+        ${cats.map((c) => `<section class="gl-cat"><h2>${esc(c.name)}</h2><div class="gl-list">${c.items.map((g) => `<button type="button" data-gl="${g.id}" data-find="${esc((g.t + ' ' + g.e + ' ' + g.k.join(' ')).toLowerCase())}"><b>${esc(en ? g.e : g.t)}</b><span>${esc(en ? g.t : g.e)}</span></button>`).join('')}</div></section>`).join('')}
+        <p class="muted center" id="glNone" hidden>ไม่พบศัพท์นี้ ลองคำอื่น หรือถามครูได้ในกล่อง “ถามครู” ใต้เฉลย</p>
+      </main>${footer()}`;
+    document.getElementById('glSearch').oninput = (e) => {
+      const v = e.target.value.trim().toLowerCase(); let any = false;
+      document.querySelectorAll('.gl-cat').forEach((sec) => {
+        let n = 0; sec.querySelectorAll('[data-find]').forEach((b) => { const hit = !v || b.dataset.find.includes(v); b.hidden = !hit; if (hit) n++; });
+        sec.hidden = !n; if (n) any = true;
+      });
+      document.getElementById('glNone').hidden = any;
+    };
+  }
+
   /* =========================================================
      การคลิก (ใช้ร่วมทุกหน้า)
      ========================================================= */
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-act],[data-play],[data-choice],[data-jump],[data-href],[data-lang]');
+    if (e.target.id === 'glVeil') return closeGloss();
+    const t = e.target.closest('[data-act],[data-play],[data-choice],[data-jump],[data-href],[data-lang],[data-gl],[data-pv]');
     if (!t) return;
+    if (t.dataset.gl) { e.preventDefault(); return openGloss(t.dataset.gl); }
+    if (t.dataset.act === 'gl-close') return closeGloss();
+    if (t.dataset.act === 'pv-listen' && PV) { Music.play(PV.qs[+t.dataset.i].audio); t.textContent = '↻ ฟังอีกครั้ง'; return; }
+    if (t.dataset.act === 'copy-follow') {
+      const msg = FOLLOW[t.dataset.code] || '';
+      const done = () => { t.textContent = 'คัดลอกแล้ว ✓'; setTimeout(() => { t.textContent = 'คัดลอกข้อความ'; }, 1800); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(msg).then(done, () => prompt('คัดลอกข้อความนี้', msg));
+      else prompt('คัดลอกข้อความนี้', msg);
+      return;
+    }
+    if (t.dataset.pv && PV) { const [i, j] = t.dataset.pv.split('|').map(Number); if (PV.resp[i] === null) { PV.resp[i] = j; pvDraw(i); } return; }
     if (t.dataset.href) return go(t.dataset.href);
     if (t.dataset.lang) { try { localStorage.setItem('cn_lang', t.dataset.lang); } catch (x) {} const y = window.scrollY; const r = PLAY ? pagePlay() : route(); Promise.resolve(r).then(() => window.scrollTo(0, y)); return; }
     if (t.dataset.play) { const [c, s, m] = t.dataset.play.split('|'); return startPlay(c, s, m); }
@@ -1018,6 +1305,7 @@
   async function route() {
     clearInterval(timerId);
     const [page, arg] = location.hash.replace(/^#\/?/, '').split('/');
+    closeGloss();
     if (page !== 'play') Music.stop();
     window.scrollTo(0, 0);
     const my = ++routeSeq;
@@ -1040,6 +1328,8 @@
       case 'me': return pageMe();
       case 'info': return pageInfo(arg);
       case 'questions': return pageQuestions();
+      case 'preview': return pagePreview(arg);
+      case 'glossary': return pageGlossary();
       case 'admin':
         if (arg === 'results') return pageAdminResults();
         if (arg === 'student') return pageAdminStudent(location.hash.split('/').slice(3).join('/'));

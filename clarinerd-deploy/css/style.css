@@ -380,3 +380,136 @@ main.play .question, main.play .ex, .lesson-body { -webkit-user-select: none; us
 .loading-veil { position: fixed; inset: 0; z-index: 50; background: color-mix(in srgb, var(--paper) 80%, transparent); display: grid; place-items: center; }
 .loading-veil .loading { min-height: 0; }
 .tbl tr.flag td { background: var(--low-bg); }
+
+/* ---------- โปสเตอร์คอร์สกดได้ ---------- */
+a.poster { text-decoration: none; cursor: pointer; }
+.poster u { text-decoration: none; margin-top: 8px; font-size: .85rem; font-weight: 700; color: #fff; }
+/* ---------- หน้าตัวอย่างคอร์ส ---------- */
+main.preview { max-width: 820px; }
+.pv-hero { padding: 28px 28px 26px; border-radius: var(--r); margin-bottom: 16px; background: linear-gradient(150deg, color-mix(in oklab, var(--c), #000 35%) 0%, color-mix(in oklab, var(--c), #000 82%) 100%); }
+.pv-hero .eyebrow { color: #fff; opacity: .85; }
+.pv-hero h1 { margin: 0 0 .4em; }
+.pv-hero .lead { margin: 0; max-width: none; font-size: 1rem; }
+.pv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .pv-cols { grid-template-columns: 1fr; gap: 0; } }
+.pv-cols .card h2 { font-size: 1.1rem; margin: 0 0 4px; }
+.pv-cols .chips { margin-top: 12px; }
+.pv-get { margin: 10px 0 0; padding-left: 20px; color: var(--ink-2); font-size: .95rem; line-height: 1.65; }
+.pv-get li { margin: 5px 0; }
+.pv-get li::marker { color: var(--gold); }
+.pv-q h3 { font-size: 1.12rem; line-height: 1.5; margin: 12px 0 14px; }
+.pv-q .feedback { margin: 14px 0 0; background: var(--paper-2); }
+.pv-score { color: var(--gold); font-weight: 700; margin-left: 6px; }
+.tag.lv.easy { color: var(--good); background: var(--good-bg); }
+.tag.lv.mid { color: var(--mid); background: rgba(255,255,255,.08); }
+.tag.lv.hard { color: var(--low); background: var(--low-bg); }
+.pv-cta { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
+.pv-cta > div { flex: 1 1 280px; }
+/* ---------- คลังศัพท์ ---------- */
+button.gl { appearance: none; border: 0; background: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted var(--gold); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+button.gl:hover { color: var(--gold); }
+.gl-hint { font-size: .8rem !important; color: var(--muted) !important; margin-top: 12px !important; }
+.gl-veil { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.66); display: grid; place-items: center; padding: 16px; }
+.gl-sheet { position: relative; width: min(560px, 100%); max-height: min(86vh, 760px); overflow: auto; background: var(--card); border-radius: var(--r); padding: 26px 26px 20px; box-shadow: 0 30px 80px -20px #000; }
+.gl-sheet h2 { margin: 0; font-size: 1.5rem; }
+.gl-sub { margin: 2px 0 14px; color: var(--muted); font-size: .92rem; }
+.gl-body { color: var(--ink-2); line-height: 1.8; font-size: .98rem; margin: 12px 0 0; }
+.gl-x { position: absolute; right: 12px; top: 12px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--paper-2); color: var(--ink); cursor: pointer; font-size: 1rem; }
+.gl-rel { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+.gl-rel button { border: 0; border-radius: 999px; padding: 7px 14px; background: var(--paper-2); color: var(--ink); font: 600 .86rem var(--sans); cursor: pointer; }
+.gl-rel button:hover { background: var(--gold); color: #000; }
+.gl-foot { margin: 18px 0 0; font-size: .85rem; }
+.gl-foot a { color: var(--muted); }
+.gl-cat { margin-top: 28px; }
+.gl-cat h2 { font-size: 1.1rem; margin-bottom: 10px; }
+.gl-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.gl-list button { text-align: left; border: 0; border-radius: 12px; padding: 13px 16px; background: var(--card); color: var(--ink); cursor: pointer; font: inherit; display: flex; flex-direction: column; gap: 2px; }
+.gl-list button:hover { background: var(--paper-2); }
+.gl-list button[hidden] { display: none; }
+.gl-list b { font-weight: 700; font-size: .98rem; }
+.gl-list span { color: var(--muted); font-size: .82rem; }
+#glSearch { margin-top: 12px; max-width: 420px; }
+
+/* ---------- ฝึกต่อเนื่อง ---------- */
+.streak { display: flex; align-items: center; gap: 22px; margin-bottom: 22px; }
+.streak-n { flex: none; width: 104px; height: 104px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 3px solid var(--line-2); }
+.streak.done .streak-n { border-color: var(--gold); }
+.streak-n b { font-size: 2.3rem; line-height: 1; font-weight: 700; letter-spacing: -.03em; }
+.streak.done .streak-n b { color: var(--gold); }
+.streak-n span { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+.streak-body { flex: 1; min-width: 0; }
+.streak-body p { margin: 0 0 10px; }
+.streak-week { display: flex; gap: 8px; margin-bottom: 8px; }
+.streak-week i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--paper-2); font-style: normal; }
+.streak-week i em { font-style: normal; font-size: .74rem; font-weight: 700; color: var(--muted); }
+.streak-week i.on { background: var(--gold); }
+.streak-week i.on em { color: #000; }
+.streak-week i.today:not(.on) { outline: 2px dashed var(--line-2); outline-offset: 2px; }
+@media (max-width: 520px) { .streak { gap: 14px; } .streak-n { width: 84px; height: 84px; } .streak-n b { font-size: 1.9rem; } .streak-week { gap: 5px; } .streak-week i { width: 30px; height: 30px; } }
+
+/* ---------- ระดับและกระดานอันดับ ---------- */
+.dash { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; margin-bottom: 26px; }
+.dash > .card { margin: 0; }
+.dash > .card:only-child { grid-column: 1 / -1; }
+@media (max-width: 860px) { .dash { grid-template-columns: 1fr; } }
+.rank-tier { display: flex; align-items: center; gap: 18px; padding-bottom: 18px; margin-bottom: 16px; border-bottom: 1px solid var(--line-2); --t: #9a9aa3; }
+.rank-tier.t1 { --t: #c98a5b; } .rank-tier.t2 { --t: #c9ccd6; } .rank-tier.t3 { --t: #f5c451; } .rank-tier.t4 { --t: #1ed760; } .rank-tier.t5 { --t: #4cc9f0; } .rank-tier.t6 { --t: #c77dff; }
+.rank-badge { flex: none; min-width: 124px; padding: 12px 16px; border-radius: 14px; text-align: center; background: color-mix(in srgb, var(--t) 16%, transparent); border: 1px solid color-mix(in srgb, var(--t) 55%, transparent); display: flex; flex-direction: column; }
+.rank-badge span { font-size: .62rem; letter-spacing: .22em; font-weight: 700; color: var(--t); }
+.rank-badge b { font-size: 1.35rem; font-weight: 700; letter-spacing: -.01em; color: var(--ink); line-height: 1.25; }
+.rank-badge i { font-style: normal; font-size: .72rem; color: var(--muted); }
+.rank-prog { flex: 1; min-width: 0; }
+.rank-prog p { margin: 0 0 6px; }
+.rank-prog .progress { margin: 6px 0; }
+.rank-prog .progress i { background: var(--t); }
+.rank-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.rank-head h2 { font-size: 1.1rem; margin: 0; }
+.rank-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.rank-list li { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; }
+.rank-list li.me { background: var(--gold-soft); }
+.rank-list li.gap { justify-content: center; color: var(--muted); padding: 0; }
+.rank-list .rk { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .85rem; background: var(--paper-2); color: var(--ink-2); }
+.rank-list .r1 .rk { background: #f5c451; color: #000; } .rank-list .r2 .rk { background: #c9ccd6; color: #000; } .rank-list .r3 .rk { background: #c98a5b; color: #000; }
+.rank-list .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.rank-list .nm em { font-style: normal; font-weight: 400; color: var(--muted); font-size: .85rem; }
+.rank-list .xp { font-variant-numeric: tabular-nums; font-weight: 700; }
+.rank-status { margin: 12px 0 0; font-size: .92rem; color: var(--ink-2); }
+.rank-set { margin-top: 12px; font-size: .9rem; }
+.rank-set summary { cursor: pointer; color: var(--muted); }
+.rank-set form { gap: 10px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+.rank-set input:not([type=checkbox]) { flex: 1 1 150px; margin: 0; }
+.rank-set label { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.rank-set input[type=checkbox] { width: auto; margin: 0; }
+
+/* ---------- ภารกิจประจำวัน + แต้มที่ได้ ---------- */
+.streak { flex-wrap: wrap; }
+.quests { flex: 1 1 100%; border-top: 1px solid var(--line-2); padding-top: 14px; display: grid; gap: 8px; }
+.quests .ex-h { margin: 0 0 2px !important; display: flex; justify-content: space-between; }
+.quests .ex-h span { color: var(--gold); }
+.quest { display: flex; align-items: center; gap: 10px; font-size: .93rem; color: var(--ink-2); }
+.quest i { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-2); display: grid; place-items: center; font-style: normal; font-size: .75rem; font-weight: 700; color: #000; }
+.quest.ok i { background: var(--gold); border-color: var(--gold); }
+.quest.ok span { color: var(--muted); text-decoration: line-through; }
+.quest span { flex: 1; }
+.quest em { font-style: normal; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.quest-all { color: var(--gold); margin: 2px 0 0; }
+.gain { display: flex; align-items: center; gap: 20px; background: linear-gradient(90deg, rgba(30,215,96,.18), var(--card) 70%); }
+.gain-n { flex: none; display: flex; align-items: baseline; gap: 6px; }
+.gain-n b { font-size: 2.4rem; font-weight: 700; letter-spacing: -.03em; color: var(--gold); line-height: 1; }
+.gain-n span { color: var(--ink-2); font-weight: 600; }
+.gain-body { flex: 1; min-width: 0; }
+.gain-body .chips { margin: 0 0 8px; }
+.gain-body .chips .hot { background: var(--gold); color: #000; }
+.gain-body p { margin: 0; }
+@media (max-width: 520px) { .gain { flex-direction: column; align-items: flex-start; gap: 10px; } }
+
+/* ---------- สารบัญบทเรียนในหน้าตัวอย่าง ---------- */
+.pv-outline { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+.pv-outline li { display: flex; align-items: flex-start; gap: 14px; padding: 12px 14px; border-radius: 12px; background: var(--paper-2); }
+.pv-outline .n { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .88rem; background: color-mix(in srgb, var(--c) 30%, transparent); color: var(--ink); }
+.pv-outline div { flex: 1; min-width: 0; }
+.pv-outline b { font-weight: 700; }
+.pv-outline p { margin: 2px 0 0; font-size: .9rem; color: var(--ink-2); }
+.pv-outline .lock { flex: none; font-size: .85rem; opacity: .55; }
+.pv-q .audio-box { margin-bottom: 14px; }
+@media (min-width: 1001px) { .posters { grid-template-columns: repeat(4, 1fr); } }
