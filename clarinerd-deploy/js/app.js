@@ -245,7 +245,7 @@
     const t = (id, label) => `<a href="#/admin/${id}" class="${active === id ? 'on' : ''}">${label}</a>`;
     const open = Store.adminQuestions ? Store.adminQuestions().filter((q) => !q.answer).length : 0;
     const owner = Store.role ? Store.role() === 'owner' && Store.staff && Store.staff() : false;
-    return header(`${t('codes', 'รหัสนักเรียน')}${t('results', 'ผลคะแนน')}${t('questions', 'คำถาม' + (open ? `<span class="badge">${open}</span>` : ''))}${t('teach', 'สอน')}${owner ? t('staff', 'ครู') + t('usage', 'การใช้งาน') : ''}${t('settings', 'ตั้งค่า')}<button class="link" data-act="logout">ออก</button>`);
+    return header(`${t('codes', 'รหัสนักเรียน')}${t('results', 'ผลคะแนน')}${t('questions', 'คำถาม' + (open ? `<span class="badge">${open}</span>` : ''))}${t('teach', 'สอน')}${t('homework', 'การบ้าน')}${owner ? t('staff', 'ครู') + t('usage', 'การใช้งาน') : ''}${t('settings', 'ตั้งค่า')}<button class="link" data-act="logout">ออก</button>`);
   }
 
   /* ---------------- ตรวจสิทธิ์ ---------------- */
@@ -376,6 +376,7 @@
         <div class="page-head"><p class="eyebrow">ห้องเรียนของฉัน</p><h1>สวัสดี ${esc(rec.name)}</h1>
         <p class="muted">เลือกคอร์สที่ต้องการเรียน ${rec.expires ? `· รหัสใช้ได้ถึง ${fmtDate(rec.expires)}` : ''}</p></div>
         <div class="dash">${streakHTML(Store.attemptsFor(rec.code))}${boardHTML(rec)}</div>
+        ${nextHTML(rec, best)}
         <div class="grid courses">${cards}</div>
         ${(window.NEWS || []).length ? `<section class="card news-card"><h2>ใหม่สัปดาห์นี้</h2>${newsHTML(1)}<p class="small"><a href="#/news">ดูอัปเดตทั้งหมด →</a></p></section>` : ''}
       </main>${footer()}`;
@@ -691,7 +692,7 @@
           <div class="ring ${scoreClass(p)}" style="--p:${p}"><span>${p}%</span></div>
           <div><p class="small muted">${esc(c?.short || '')} · ${esc(a.setTitle)} · ${a.mode === 'exam' ? 'โหมดสอบ' : 'โหมดฝึก'}</p>
           <h1>${a.score} / ${a.total} คะแนน</h1><p>${msg}</p><p class="small muted">ใช้เวลา ${fmtDur(a.durSec)} นาที</p>
-          <div class="row"><button class="btn primary" data-play="${a.courseId}|${a.setId}|${a.mode}">ทำอีกครั้ง</button>${weakTags(rec.code, a.courseId).length ? `<button class="btn" data-play="${a.courseId}|weak|practice">ฝึกจุดอ่อน</button>` : ''}<a class="btn ghost" href="#/course/${a.courseId}">เลือกชุดอื่น</a></div></div>
+          <div class="row"><button class="btn primary" data-play="${a.courseId}|${a.setId}|${a.mode}">ทำอีกครั้ง</button>${weakTags(rec.code, a.courseId).length ? `<button class="btn" data-play="${a.courseId}|weak|practice">ฝึกจุดอ่อน</button>` : ''}<a class="btn ghost" href="#/course/${a.courseId}">เลือกชุดอื่น</a></div>${certOK(a) ? `<p class="cert-link"><a href="#/cert/${a.id}">รับเกียรติบัตรของการทดสอบนี้ →</a></p>` : ''}</div>
         </section>
         ${gainHTML(a, Store.attemptsFor(rec.code))}
         <section class="card"><h2>คะแนนแยกตามหัวข้อ</h2>${breakdownHTML(a.items)}</section>
@@ -706,7 +707,7 @@
     const rec = requireStudent(); if (!rec) return;
     const list = Store.attemptsFor(rec.code).slice().reverse();
     $app.innerHTML = `${studentNav(rec)}
-      <main><div class="page-head"><h1>ผลของฉัน</h1><p class="muted">ทำไปแล้ว ${list.length} ครั้ง</p></div>
+      <main><div class="page-head"><h1>ผลของฉัน</h1><p class="muted">ทำไปแล้ว ${list.length} ครั้ง${list.length ? ' · <a href="#/report">รายงานผล 30 วัน (พิมพ์ให้ผู้ปกครองได้) →</a>' : ''}</p></div>
       ${streakHTML(list)}
       ${list.length ? `<section class="card"><table class="tbl"><thead><tr><th>วันที่</th><th>ชุด</th><th>โหมด</th><th>คะแนน</th></tr></thead><tbody>
         ${list.map((a) => `<tr class="click" data-href="#/result/${a.id}"><td>${fmtDateTime(a.date)}</td><td>${esc(courseById(a.courseId)?.short || '')} · ${esc(a.setTitle)}</td><td>${a.mode === 'exam' ? 'สอบ' : 'ฝึก'}</td><td><span class="score-pill ${scoreClass(pct(a.score, a.total))}">${a.score}/${a.total}</span></td></tr>`).join('')}
@@ -928,6 +929,108 @@
       </main>`;
   }
 
+  /* ---------- รายงานผล 30 วัน (พิมพ์ให้ผู้ปกครอง) · เกียรติบัตร · ตามการบ้าน ---------- */
+  function reportHTML(name, all, back, teacher) {
+    const since = dayBack(29); since.setHours(0, 0, 0, 0);
+    const list = all.filter((a) => new Date(a.date) >= since);
+    const items = list.flatMap((a) => a.items), ok = items.filter((x) => x.ok).length;
+    const days = new Set(list.map((a) => dayKey(a.date))).size, st = streakOf(all);
+    const tb = tagBreakdown(items).filter(([, v]) => v.n >= 3);
+    const weak = tb.filter(([, v]) => v.ok / v.n < 0.7).slice(0, 4), strong = tb.slice().reverse().filter(([, v]) => v.ok / v.n >= 0.8).slice(0, 4);
+    const byC = {}; list.forEach((a) => { const k = a.courseId; byC[k] = byC[k] || { n: 0, s: 0, t: 0, sets: new Set() }; byC[k].n++; byC[k].s += a.score; byC[k].t += a.total; byC[k].sets.add(a.setId); });
+    const exams = list.filter((a) => a.mode === 'exam').slice(-6).reverse();
+    const half = (from, to) => { const x = list.filter((a) => { const d = new Date(a.date); return d >= from && d < to; }); const t = x.reduce((n, a) => n + a.total, 0); return t ? pct(x.reduce((n, a) => n + a.score, 0), t) : null; };
+    const mid = dayBack(14); mid.setHours(0, 0, 0, 0); const p1 = half(since, mid), p2 = half(mid, new Date(Date.now() + 864e5));
+    const trend = p1 === null || p2 === null ? '' : p2 - p1 >= 5 ? `ความแม่นยำ 15 วันหลังสูงขึ้นจาก ${p1}% เป็น ${p2}%` : p1 - p2 >= 5 ? `ความแม่นยำ 15 วันหลังลดลงจาก ${p1}% เป็น ${p2}% ควรทบทวนหัวข้อที่อ่อนก่อนไปต่อ` : `ความแม่นยำคงที่ประมาณ ${p2}%`;
+    const tl = (rows) => rows.map(([t, v]) => `<tr><td>${esc(t)}</td><td>${v.ok}/${v.n}</td><td>${pct(v.ok, v.n)}%</td></tr>`).join('');
+    return `<div class="sheet-bar"><a class="link" href="${back}">← กลับ</a><span class="row"><button class="btn primary" data-act="sh-print">พิมพ์ / บันทึก PDF</button></span></div>
+      <main class="sheet plan report">
+        <header class="sheet-head"><div><span>รายงานผลการฝึก 30 วัน</span><b>${esc(name)}</b></div>
+          <div class="sheet-name"><span>${fmtDate(dayKey(since))} – ${fmtDate(dayKey(new Date()))}</span><span>Clarinerd</span></div></header>
+        ${list.length ? `<div class="rep-stats"><div><b>${days}</b><span>วันที่ฝึก จาก 30 วัน</span></div><div><b>${list.length}</b><span>ชุดที่ทำ</span></div><div><b>${items.length}</b><span>ข้อที่ตอบ</span></div><div><b>${pct(ok, items.length)}%</b><span>ตอบถูก</span></div><div><b>${st.best}</b><span>วันติดต่อกันสูงสุด</span></div></div>
+        ${trend ? `<p class="rep-trend">${trend}</p>` : ''}
+        <h3>แยกตามคอร์ส</h3><table class="plan-t"><thead><tr><th>คอร์ส</th><th>ทำกี่ครั้ง</th><th>ชุดที่ทำแล้ว</th><th>คะแนนเฉลี่ย</th></tr></thead><tbody>${Object.entries(byC).map(([k, v]) => { const c = courseById(k); return `<tr><td>${esc(c ? c.title : k)}</td><td>${v.n}</td><td>${v.sets.size}${c ? ' จาก ' + allSets(c).length : ''}</td><td>${pct(v.s, v.t)}%</td></tr>`; }).join('')}</tbody></table>
+        <div class="rep-cols"><div><h3>ทำได้ดี</h3>${strong.length ? `<table class="plan-t"><tbody>${tl(strong)}</tbody></table>` : '<p>ยังไม่มีหัวข้อที่ตอบถูกถึง 80%</p>'}</div>
+          <div><h3>ควรฝึกเพิ่ม</h3>${weak.length ? `<table class="plan-t"><tbody>${tl(weak)}</tbody></table>` : '<p>ไม่มีหัวข้อที่ต่ำกว่า 70%</p>'}</div></div>
+        ${exams.length ? `<h3>ผลโหมดสอบล่าสุด</h3><table class="plan-t"><thead><tr><th>วันที่</th><th>ชุด</th><th>คะแนน</th></tr></thead><tbody>${exams.map((a) => `<tr><td>${fmtDate(dayKey(a.date))}</td><td>${esc(courseById(a.courseId)?.short || '')} · ${esc(a.setTitle)}</td><td>${a.score}/${a.total} (${pct(a.score, a.total)}%)</td></tr>`).join('')}</tbody></table>` : ''}
+        <h3>แนะนำสำหรับเดือนถัดไป</h3><ul>${weak.length ? `<li>ฝึกหัวข้อ ${weak.map(([t]) => `“${esc(t)}”`).join(' ')} ด้วยปุ่ม “ฝึกจุดอ่อน” ในหน้าคอร์ส</li>` : '<li>ลองทำชุดถัดไปของคอร์ส หรือทำข้อสอบจับเวลา</li>'}<li>${days >= 20 ? 'ฝึกสม่ำเสมอดีมาก รักษาจังหวะนี้ไว้' : days >= 8 ? 'เพิ่มเป็นวันเว้นวัน ครั้งละ 10 นาที จะจำได้นานกว่าฝึกครั้งเดียวนาน ๆ' : 'ตั้งเป้าฝึกสัปดาห์ละ 3 วัน วันละ 1 ชุด'}</li></ul>`
+        : '<p>ยังไม่มีผลการฝึกในช่วง 30 วันนี้</p>'}
+        ${teacher ? '<h3 class="plan-note-h">ความเห็นครู</h3><div class="plan-note"><i></i><i></i><i></i></div>' : ''}
+        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · คำนวณจากผลที่บันทึกในระบบ ณ วันที่พิมพ์</footer>
+      </main>`;
+  }
+  function pageReport() { const rec = requireStudent(); if (!rec) return; $app.innerHTML = reportHTML(rec.name, Store.attemptsFor(rec.code), '#/me', false); }
+  function pageAdminReport(code) {
+    if (!requireAdmin()) return; code = decodeURIComponent(code);
+    const c = Store.findCode(code), mine = Store.attemptsFor(code);
+    $app.innerHTML = reportHTML(c?.name || mine[0]?.name || code, mine, '#/admin/student/' + encodeURIComponent(code), true);
+  }
+  const certOK = (a) => { const f = findSet(a.courseId, a.setId); return a.mode === 'exam' && f && f.set.exam && a.total >= 15 && a.score / a.total >= 0.8; };
+  function pageCert(id) {
+    const rec = requireStudent(); if (!rec) return;
+    const a = Store.attemptById(id); if (!a || a.code !== rec.code || !certOK(a)) return go('#/me');
+    const c = courseById(a.courseId);
+    $app.innerHTML = `<div class="sheet-bar"><a class="link" href="#/result/${a.id}">← กลับ</a><span class="row"><button class="btn primary" data-act="sh-print">พิมพ์ / บันทึก PDF</button></span></div>
+      <main class="sheet cert" style="--c:${c.color}"><div class="cert-in">
+        <p class="cert-brand"><i></i>Clarinerd</p><p class="cert-k">เกียรติบัตร</p><p>มอบให้เพื่อแสดงว่า</p>
+        <h1>${esc(rec.name)}</h1>
+        <p>ผ่านการทดสอบ</p><h2>${esc(a.setTitle)}</h2><p>คอร์ส ${esc(c.title)}</p>
+        <p class="cert-score">${a.score} / ${a.total} คะแนน (${pct(a.score, a.total)}%)</p>
+        <p class="cert-date">${fmtDate(dayKey(a.date))}</p>
+        <p class="cert-foot">เกียรติบัตรนี้ออกโดย Clarinerd สำหรับแบบทดสอบในเว็บ clarinerd.netlify.app ไม่ใช่ผลสอบของหน่วยงานจัดสอบ</p>
+      </div></main>`;
+  }
+  function copyText(btn, msg) {
+    const label = btn.textContent, done = () => { btn.textContent = 'คัดลอกแล้ว ✓'; setTimeout(() => { btn.textContent = label; }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(msg).then(done, () => prompt('คัดลอกข้อความนี้', msg)); else prompt('คัดลอกข้อความนี้', msg);
+  }
+  let HW = null;
+  function pageAdminHomework() {
+    if (!requireAdmin()) return;
+    const cs = COURSES.filter((c) => !c.comingSoon);
+    if (!HW || !courseById(HW.c)) HW = { c: cs[0].id, s: allSets(cs[0])[0].id, d: dayKey(dayBack(7)) };
+    const c = courseById(HW.c), sets = allSets(c); if (!sets.some((x) => x.id === HW.s)) HW.s = sets[0].id;
+    const set = sets.find((x) => x.id === HW.s), from = new Date(HW.d + 'T00:00:00'), today = Store.today();
+    const att = Store.attempts().filter((a) => a.courseId === HW.c && a.setId === HW.s && new Date(a.date) >= from);
+    const rows = Store.codes().filter((k) => k.courses.includes(HW.c) && k.active !== false && (!k.expires || k.expires >= today)).map((k) => {
+      const mine = att.filter((a) => a.code === k.code), best = mine.length ? Math.max(...mine.map((a) => pct(a.score, a.total))) : null;
+      return { k, n: mine.length, best, last: mine.length ? mine[mine.length - 1].date : null };
+    }).sort((a, b) => (a.n ? 1 : 0) - (b.n ? 1 : 0) || a.k.name.localeCompare(b.k.name, 'th'));
+    const done = rows.filter((r) => r.n), avg = done.length ? Math.round(done.reduce((n, r) => n + r.best, 0) / done.length) : null;
+    const site = location.origin.includes('localhost') ? 'https://clarinerd.netlify.app' : location.origin;
+    const assign = `การบ้าน Clarinerd\nคอร์ส ${c.short || c.title} ชุด “${set.title}”\nทำในโหมดฝึกให้ได้ 80% ขึ้นไป ทำซ้ำได้หลายรอบ ครูเห็นคะแนนที่ดีที่สุด\nเข้าที่ ${site} แล้วใส่รหัสของตัวเอง`;
+    const remind = `ยังไม่เห็นการบ้านชุด “${set.title}” (${c.short || c.title}) ของ: ${rows.filter((r) => !r.n).map((r) => r.k.name).join(', ')}\nทำได้ที่ ${site} ใช้เวลาประมาณ 10 นาที`;
+    $app.innerHTML = `${adminNav('homework')}
+      <main><div class="page-head"><h1>การบ้าน</h1><p class="muted">เลือกชุดที่สั่ง แล้วดูว่าใครทำแล้ว ใครยังไม่ทำ และได้คะแนนดีที่สุดเท่าไร นับจากวันที่สั่ง</p></div>
+      <section class="card hw-pick"><label>คอร์ส<select id="hwC">${cs.map((x) => `<option value="${x.id}" ${x.id === HW.c ? 'selected' : ''}>${esc(x.short || x.title)}</option>`).join('')}</select></label>
+        <label>ชุดฝึก<select id="hwS">${c.units.map((u) => u.sets.length ? `<optgroup label="${esc(u.title)}">${u.sets.map((x) => `<option value="${x.id}" ${x.id === HW.s ? 'selected' : ''}>${esc(x.title)}</option>`).join('')}</optgroup>` : '').join('')}</select></label>
+        <label>สั่งเมื่อ<input type="date" id="hwD" value="${HW.d}" max="${dayKey(new Date())}"></label></section>
+      <section class="card"><div class="row between hw-top"><h2>${done.length} / ${rows.length} คนทำแล้ว${avg === null ? '' : ` · เฉลี่ย ${avg}%`}</h2>
+        <span class="row"><button class="btn primary" id="hwA">คัดลอกข้อความสั่งงาน</button>${rows.length > done.length ? '<button class="btn" id="hwR">คัดลอกข้อความตามคนที่ยังไม่ทำ</button>' : ''}</span></div>
+        ${rows.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>สถานะ</th><th>คะแนนดีที่สุด</th><th>ทำกี่รอบ</th><th>ล่าสุด</th></tr></thead><tbody>
+          ${rows.map((r) => `<tr class="click" data-href="#/admin/student/${encodeURIComponent(r.k.code)}"><td><b>${esc(r.k.name)}</b></td><td>${r.n ? '<span class="score-pill good">ทำแล้ว</span>' : '<span class="score-pill low">ยังไม่ทำ</span>'}</td><td>${r.best === null ? '—' : `<span class="score-pill ${scoreClass(r.best)}">${r.best}%</span>`}</td><td>${r.n || '—'}</td><td class="small">${r.last ? fmtDateTime(r.last) : '—'}</td></tr>`).join('')}
+        </tbody></table></div>` : '<p class="muted">ยังไม่มีนักเรียนที่เปิดคอร์สนี้ ไปที่ “รหัสนักเรียน” เพื่อเปิดคอร์สให้ก่อน</p>'}</section></main>`;
+    document.getElementById('hwC').onchange = (e) => { HW.c = e.target.value; HW.s = allSets(courseById(HW.c))[0].id; pageAdminHomework(); };
+    document.getElementById('hwS').onchange = (e) => { HW.s = e.target.value; pageAdminHomework(); };
+    document.getElementById('hwD').onchange = (e) => { if (e.target.value) { HW.d = e.target.value; pageAdminHomework(); } };
+    document.getElementById('hwA').onclick = (e) => copyText(e.target, assign);
+    const r = document.getElementById('hwR'); if (r) r.onclick = (e) => copyText(e.target, remind);
+  }
+  /** การ์ด “ทำอะไรต่อดี” บนแดชบอร์ดนักเรียน: ชุดถัดไปที่ยังไม่เคยทำ + จุดอ่อน */
+  function nextHTML(rec, best) {
+    const open = COURSES.filter((c) => rec.courses.includes(c.id) && !c.comingSoon);
+    const last = Store.attemptsFor(rec.code).slice(-1)[0];
+    const order = last ? [...open.filter((c) => c.id === last.courseId), ...open.filter((c) => c.id !== last.courseId)] : open;
+    let pick = null;
+    for (const c of order) { const st = allSets(c).find((x) => !((c.id + '/' + x.id) in best)); if (st) { pick = { c, st }; break; } }
+    const wc = order.find((c) => weakTags(rec.code, c.id).length);
+    if (!pick && !wc) return '';
+    return `<section class="card next-card"><div><p class="eyebrow">ทำอะไรต่อดี</p>
+      ${pick ? `<p><b>${esc(pick.st.title)}</b><span class="small muted"> · ${esc(pick.c.short || pick.c.title)} · ชุดถัดไปที่ยังไม่เคยทำ</span></p>` : ''}
+      ${wc ? `<p class="small muted">จุดที่ควรทบทวนใน ${esc(wc.short || wc.title)}: ${weakTags(rec.code, wc.id).map(([t]) => esc(t)).join(' · ')}</p>` : ''}</div>
+      <div class="row">${pick ? `<button class="btn primary" data-play="${pick.c.id}|${pick.st.id}|${pick.st.exam ? 'exam' : 'practice'}">เริ่มเลย</button>` : ''}${wc ? `<button class="btn" data-play="${wc.id}|weak|practice">ฝึกจุดอ่อน</button>` : ''}</div></section>`;
+  }
+
   function pageAdminStudent(code) {
     if (!requireAdmin()) return;
     code = decodeURIComponent(code);
@@ -938,7 +1041,7 @@
     $app.innerHTML = `${adminNav('results')}
       <main>
         <a class="back" href="#/admin/results">← ผลคะแนนทั้งหมด</a>
-        <div class="page-head"><h1>${esc(name)}</h1><p class="muted"><code>${esc(code)}</code> ${c ? `· ${c.courses.map((x) => courseById(x)?.short).join(', ')} · ใช้ได้ถึง ${c.expires ? fmtDate(c.expires) : 'ไม่หมดอายุ'}` : '· (รหัสถูกลบแล้ว)'}</p></div>
+        <div class="page-head"><h1>${esc(name)}</h1><p class="muted"><code>${esc(code)}</code> ${c ? `· ${c.courses.map((x) => courseById(x)?.short).join(', ')} · ใช้ได้ถึง ${c.expires ? fmtDate(c.expires) : 'ไม่หมดอายุ'}` : '· (รหัสถูกลบแล้ว)'}</p>${mine.length ? `<p><a class="btn" href="#/admin/report/${encodeURIComponent(code)}">รายงานผล 30 วัน สำหรับส่งผู้ปกครอง</a></p>` : ''}</div>
         ${mine.length ? `
         <section class="card"><h2>ความแม่นยำแยกตามหัวข้อ (รวมทุกครั้ง)</h2><p class="small muted">เรียงจากหัวข้อที่อ่อนที่สุดขึ้นก่อน</p>${breakdownHTML(items)}</section>
         <section class="card"><h2>ประวัติการทำ (${mine.length} ครั้ง)</h2><div class="tbl-wrap"><table class="tbl"><thead><tr><th>เวลา</th><th>ชุด</th><th>โหมด</th><th>เวลาที่ใช้</th><th>คะแนน</th></tr></thead><tbody>
@@ -1598,6 +1701,8 @@
       case 'plan': return pagePlan(arg, location.hash.split('/')[3]);
       case 'term': return pageTerm(arg);
       case 'news': return pageNews();
+      case 'report': return pageReport();
+      case 'cert': return pageCert(arg);
       case 'about': return pageAbout();
       case 'admin':
         if (arg === 'results') return pageAdminResults();
@@ -1608,6 +1713,8 @@
         if (arg === 'staff') return pageAdminStaff();
         if (arg === 'usage') return pageAdminUsage();
         if (arg === 'teach') return pageAdminTeach();
+        if (arg === 'homework') return pageAdminHomework();
+        if (arg === 'report') return pageAdminReport(location.hash.split('/').slice(3).join('/'));
         if (arg === 'class') return requireAdmin() && (CLASS ? pageClass() : go('#/admin/teach'));
         if (arg === 'sheet') return requireAdmin() && (SHEET ? pageSheet() : go('#/admin/teach'));
         return pageAdminCodes();

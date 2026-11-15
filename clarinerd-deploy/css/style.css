@@ -668,3 +668,32 @@ main.narrow.wide { max-width: 820px; }
 .about p { margin: 6px 0; color: var(--ink-2); line-height: 1.7; }
 .about a { color: var(--ink); }
 .foot .links { flex-wrap: wrap; }
+
+/* ---------- รายงานผล · เกียรติบัตร · การบ้าน · ทำอะไรต่อดี ---------- */
+.rep-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 6px 0 10px; }
+.rep-stats div { border: 1px solid #bbb; border-radius: 8px; padding: 10px 8px; text-align: center; }
+.rep-stats b { display: block; font-size: 24px; line-height: 1.2; color: #111; }
+.rep-stats span { font-size: 12px; color: #444; }
+.rep-trend { font-weight: 600; }
+.rep-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 600px) { .rep-stats { grid-template-columns: repeat(2, 1fr); } .rep-cols { grid-template-columns: 1fr; } main.sheet { padding: 24px 18px; } }
+main.sheet.cert { padding: 28px; text-align: center; }
+.cert-in { border: 3px solid var(--c); outline: 1px solid var(--c); outline-offset: 6px; border-radius: 4px; padding: 56px 36px 40px; margin: 8px; }
+.cert-in p { margin: 6px 0; color: #333; font-size: 16px; }
+.cert-brand { display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 700; font-size: 20px !important; color: #111 !important; }
+.cert-brand i { width: 12px; height: 12px; border-radius: 50%; background: #1ed760; }
+.cert-k { font-size: 40px !important; font-weight: 700; color: #111 !important; letter-spacing: .04em; margin: 22px 0 14px !important; }
+.cert-in h1 { color: #111; font-size: 34px; margin: 14px 0 18px; padding-bottom: 10px; border-bottom: 1px solid #999; display: inline-block; min-width: 60%; }
+.cert-in h2 { color: #111; font-size: 22px; margin: 8px 0 4px; }
+.cert-score { font-weight: 700; color: #111 !important; margin-top: 18px !important; }
+.cert-date { margin-top: 26px !important; }
+.cert-foot { margin-top: 34px !important; font-size: 11.5px !important; color: #666 !important; }
+.cert-link { margin: 12px 0 0; font-weight: 600; }
+.hw-pick { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 14px; }
+.hw-pick label { margin: 0; }
+.hw-top { gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.hw-top h2 { margin: 0; }
+@media (max-width: 720px) { .hw-pick { grid-template-columns: 1fr; } }
+.next-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-left: 3px solid var(--gold); margin-bottom: 18px; }
+.next-card p { margin: 2px 0; }
+.next-card .eyebrow { margin-bottom: 4px; }

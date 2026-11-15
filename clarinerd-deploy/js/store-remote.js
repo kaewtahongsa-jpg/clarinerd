@@ -124,8 +124,8 @@
   async function prepare(page, arg) {
     await boot();
     const s = session();
-    if (s && s.type === 'student' && ['', 'courses', 'course', 'play', 'result', 'me', 'info', 'questions'].includes(page)) {
-      await loadStudent(page === 'courses' || page === 'me');
+    if (s && s.type === 'student' && ['', 'courses', 'course', 'play', 'result', 'me', 'info', 'questions', 'report', 'cert'].includes(page)) {
+      await loadStudent(page === 'courses' || page === 'me' || page === 'report');
       if (['courses', 'me', 'questions'].includes(page)) await loadMyQuestions();
       if (page === 'courses') await loadBoard();
       if (page === 'course' || page === 'info') await loadCourse(arg);
