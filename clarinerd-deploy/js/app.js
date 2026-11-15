@@ -235,7 +235,7 @@
   }
   function footer() {
     return `<footer class="foot"><span>© ${new Date().getFullYear() + 543} Clarinerd · ครูดรีม (Kaewta Hongsa)</span>
-      <span class="links"><a href="${YT}" target="_blank" rel="noopener">YouTube</a><a href="${LINE}" target="_blank" rel="noopener">LINE: k.kaewta19</a></span></footer>`;
+      <span class="links"><a href="#/about">เกี่ยวกับและข้อชี้แจง</a><a href="#/news">มีอะไรใหม่</a><a href="${YT}" target="_blank" rel="noopener">YouTube</a><a href="${LINE}" target="_blank" rel="noopener">LINE: k.kaewta19</a></span></footer>`;
   }
   function studentNav(rec) {
     const unread = Store.myQuestions ? Store.myQuestions(rec.code).filter((q) => q.answer && !q.seen).length : 0;
@@ -1131,11 +1131,11 @@
     tpat22: { kicker: 'TCAS', title: 'TPAT22 ความถนัดดนตรี', color: '#e8115b',
       who: 'นักเรียน ม.ปลาย ที่จะสอบ TPAT22 เพื่อยื่นคณะดนตรีและคณะที่ใช้คะแนนนี้',
       topics: ['จังหวะ', 'ทำนองและบันไดเสียง', 'เสียงประสาน', 'รูปพรรณและสีสันของเสียง', 'รูปแบบและสังคีตลักษณ์', 'ประวัติและวรรณกรรมดนตรี', 'เครื่องดนตรีสากลและไทย', 'ดนตรีไทย', 'ดนตรีกับสังคม'],
-      get: ['คลังข้อสอบกว่า 180 ข้อ ครอบคลุมทั้งดนตรีสากลและดนตรีไทย', 'จัดหัวข้อตามองค์ประกอบดนตรีในโครงสร้างข้อสอบ', 'โหมดสอบจับเวลา และโหมดฝึกที่เฉลยทันทีทีละข้อ'] },
+      get: ['คลังข้อสอบกว่า 200 ข้อ มีทั้งดนตรีสากลและดนตรีไทย', 'จัดหัวข้อตามองค์ประกอบดนตรีในโครงสร้างข้อสอบ', 'โหมดสอบจับเวลา และโหมดฝึกที่เฉลยทันทีทีละข้อ'] },
     abrsm: { kicker: 'Theory', title: 'ABRSM Music Theory Grade 5', color: '#2d6cf6',
       who: 'คนที่เตรียมสอบ ABRSM Theory Grade 5 ซึ่งต้องผ่านก่อนสอบปฏิบัติ Grade 6 ขึ้นไป',
       topics: ['Rhythm & metre', 'Clefs & pitch', 'Transposition', 'Keys & scales', 'Intervals', 'Chords & cadences', 'Terms & signs', 'Instruments'],
-      get: ['โจทย์ภาษาอังกฤษตามแนวข้อสอบจริง มีคำแปลโจทย์ให้', 'เฉลยสลับอ่านได้ทั้งไทยและอังกฤษ เพื่อคุ้นศัพท์ที่ใช้ในห้องสอบ', 'คลังข้อสอบ 99 ข้อ และโจทย์สุ่มเรื่องกุญแจเสียง ขั้นคู่ และการทดเสียง'] },
+      get: ['โจทย์ภาษาอังกฤษตามหัวข้อในหลักสูตร Grade 5 มีคำแปลโจทย์ให้', 'เฉลยสลับอ่านได้ทั้งไทยและอังกฤษ เพื่อคุ้นศัพท์ที่ใช้ในห้องสอบ', 'คลังข้อสอบ 99 ข้อ และโจทย์สุ่มเรื่องกุญแจเสียง ขั้นคู่ และการทดเสียง'] },
     uni: { kicker: 'Audition', title: 'สอบตรงคณะดนตรี', color: '#8b5cf6',
       who: 'คนที่จะสอบเข้าคณะดนตรีหรือดุริยางคศาสตร์ ซึ่งมีข้อเขียนทฤษฎีและประวัติดนตรีระดับสูงกว่า TPAT',
       topics: ['การประสานเสียง 4 แนว', 'โน้ตนอกคอร์ด', 'คอร์ดและการดำเนินคอร์ด', 'การเปลี่ยนกุญแจเสียง', 'บันไดเสียงและโหมด', 'สังคีตลักษณ์', 'การอ่านสกอร์และการทดเสียง', 'ประวัติดนตรีตะวันตก', 'โสตทักษะ'],
@@ -1153,7 +1153,7 @@
   PREVIEW.clarinet = { kicker: 'Clarinet', title: 'คลาริเน็ต: รู้จักเครื่องและทฤษฎีที่ต้องใช้', color: '#f59e0b',
     who: 'นักเรียนคลาริเน็ตทุกระดับ ที่อยากเข้าใจเครื่องของตัวเอง การทดเสียง และประวัติเครื่อง',
     topics: ['ส่วนประกอบและการดูแลเครื่อง', 'ลิ้น รูปปาก และการหายใจ', 'ช่วงเสียงและ the break', 'คู่ 12 และ register key', 'การทดเสียง B♭ / A / E♭', 'ครอบครัวคลาริเน็ต', 'ประวัติและบทเพลงสำคัญ'],
-    get: ['เนื้อหาที่ครูคลาริเน็ตเขียนเองจากสิ่งที่นักเรียนมักสงสัย', 'โจทย์สุ่มเรื่องช่วงเสียง คู่ 12 และการทดเสียง พร้อมภาพโน้ต', 'ใช้ทบทวนก่อนสอบปฏิบัติที่มีถามความรู้เรื่องเครื่อง'] };
+    get: ['เนื้อหาเรียบเรียงจากเรื่องที่นักเรียนคลาริเน็ตมักสงสัย', 'โจทย์สุ่มเรื่องช่วงเสียง คู่ 12 และการทดเสียง พร้อมภาพโน้ต', 'ใช้ทบทวนก่อนสอบปฏิบัติที่มีถามความรู้เรื่องเครื่อง'] };
   PREVIEW.kids = { kicker: 'Kids', title: 'ดนตรีสำหรับเด็กเล็ก', color: '#22c1c3',
     who: 'เด็ก 4–9 ปีที่เพิ่งเริ่มรู้จักดนตรี และครูหรือผู้ปกครองที่อยากมีกิจกรรมฟังเสียงเล่นกับเด็ก',
     topics: ['เสียงสูง–เสียงต่ำ', 'ดัง–เบา', 'เร็ว–ช้า', 'ยาว–สั้น', 'นับเสียง', 'เส้นกับช่อง', 'โด เร มี ฟา ซอล', 'ตัวดำ ตัวขาว ตัวกลม', 'ตา กับ ติติ'],
@@ -1384,6 +1384,18 @@
       <main class="narrow wide"><div class="page-head"><p class="eyebrow">อัปเดตทุกสัปดาห์</p><h1>มีอะไรใหม่</h1><p class="muted">Clarinerd เพิ่มเนื้อหา ข้อสอบ และตรวจข้อมูลการสอบใหม่ทุกสัปดาห์ รายการล่าสุดอยู่บนสุด</p></div>
       <section class="card">${newsHTML()}</section></main>${footer()}`;
   }
+  function pageAbout() {
+    const s = Store.session();
+    const sec = (h, ps) => `<section class="card about"><h2>${h}</h2>${ps.map((t) => `<p>${t}</p>`).join('')}</section>`;
+    $app.innerHTML = `${header(s && s.type === 'student' ? '<a href="#/courses">กลับห้องเรียน</a>' : '<a href="#/">หน้าแรก</a><a href="#/teachers">สำหรับครู</a>')}
+      <main class="narrow wide"><div class="page-head"><p class="eyebrow">เกี่ยวกับ Clarinerd</p><h1>เกี่ยวกับและข้อชี้แจง</h1></div>
+      ${sec('Clarinerd คืออะไร', ['Clarinerd เป็นเว็บฝึกทำข้อสอบและทบทวนเนื้อหาดนตรี จัดทำโดย Clarinerd ภายใต้การดูแลของครูดรีม (Kaewta Hongsa) ครูคลาริเน็ต สำหรับนักเรียนที่เตรียมสอบ และครูดนตรีที่ต้องการสื่อการสอนพร้อมใช้'])}
+      ${sec('ไม่ได้เป็นตัวแทนของหน่วยงานจัดสอบ', ['Clarinerd เป็นสื่อเตรียมสอบอิสระ ไม่ได้เป็นตัวแทน ไม่ได้รับการรับรอง และไม่มีส่วนเกี่ยวข้องกับ ABRSM ที่ประชุมอธิการบดีแห่งประเทศไทย (ทปอ.) มหาวิทยาลัย โรงเรียนดุริยางค์ทหารบก ทหารเรือ ทหารอากาศ หรือหน่วยงานจัดสอบใด', 'ชื่อการสอบ เช่น ABRSM, TPAT และ TCAS เป็นชื่อและเครื่องหมายของเจ้าของแต่ละราย ใช้ในเว็บนี้เพื่อบอกว่าเนื้อหาเตรียมสำหรับการสอบใดเท่านั้น'])}
+      ${sec('ข้อสอบในเว็บ', ['ข้อสอบทุกข้อเป็นแบบฝึกหัดที่ Clarinerd แต่งขึ้นเองตามหัวข้อในหลักสูตรหรือโครงสร้างข้อสอบที่หน่วยงานเผยแพร่ ไม่ใช่ข้อสอบจริงและไม่ได้คัดลอกจากข้อสอบจริง', 'การทำแบบฝึกหัดในเว็บช่วยทบทวนเนื้อหา แต่ไม่ได้รับประกันผลสอบ'])}
+      ${sec('ข้อมูลการสอบและกำหนดการ', ['ข้อมูลวันสมัคร คุณสมบัติ และกำหนดการ สรุปจากประกาศของหน่วยงานที่เกี่ยวข้อง และระบุวันที่ตรวจสอบไว้ในแต่ละหน้า ประกาศอาจเปลี่ยนแปลงได้หลังวันที่ตรวจสอบ', 'ก่อนสมัครหรือชำระเงินให้หน่วยงานใด โปรดตรวจกับประกาศฉบับจริงของหน่วยงานนั้นทุกครั้ง'])}
+      ${sec('พบข้อผิดพลาด', [`ถ้าพบคำตอบ คำอธิบาย หรือข้อมูลการสอบที่ไม่ถูกต้อง แจ้งได้ที่ LINE <a href="${LINE}" target="_blank" rel="noopener">k.kaewta19</a> หรือกดปุ่ม “ถามครู” ใต้เฉลยของข้อนั้น เราจะตรวจและแก้ไข แล้วลงรายการไว้ในหน้า <a href="#/news">มีอะไรใหม่</a>`])}
+      </main>${footer()}`;
+  }
   function pagePlans() {
     const adm = isAdmin(), list = planCourses();
     const total = list.reduce((n, c) => n + c.units.filter((u) => planOf(c.id, u.id)).length, 0);
@@ -1422,7 +1434,7 @@
         <p class="plan-locked">🔒 แผนฉบับเต็มมีรายละเอียดกิจกรรมทุกช่วง สื่อที่ต้องเตรียม คำถามที่ใช้ถาม จุดที่นักเรียนมักเข้าใจผิดพร้อมวิธีแก้ การบ้าน และเกณฑ์ผ่าน</p>`}
         ${sets.length ? `<h3>ชุดฝึกของบทนี้ในเว็บ</h3><ul>${sets.map((s) => `<li>${esc(s.title)}</li>`).join('')}</ul>` : ''}
         ${open ? '<h3 class="plan-note-h">บันทึกหลังสอน</h3><div class="plan-note"><i></i><i></i><i></i><i></i></div>' : ''}
-        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · แผนการสอนโดยครูดรีม (Kaewta Hongsa)</footer>
+        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · ปรับใช้ตามบริบทของห้องเรียนได้</footer>
       </main>
       <section class="plan-tools">${adm && sets.length ? `<div class="card"><h2>เปิดใช้ในคาบ</h2><ul class="sets">${sets.map((s) => `<li><div><b>${esc(s.title)}</b></div><div class="set-btns"><button class="btn primary" data-teach="class|${cid}|${s.id}">สอนหน้าห้อง</button><button class="btn" data-teach="sheet|${cid}|${s.id}">ใบงาน</button></div></li>`).join('')}</ul></div>` : ''}
         ${adm ? '' : open ? `<div class="trial pv-cta"><div><b>แผนนี้เปิดอ่านฟรี</b> ลองใช้คู่กับโหมดสอนหน้าห้องและใบงานตัวอย่างของคอร์สนี้ได้เลย</div>${PREVIEW[cid] ? `<a class="btn primary" href="#/teach-demo/${cid}">ลองสอนหน้าห้อง</a>` : `<a class="btn primary" href="#/teachers">ดูเครื่องมือครู</a>`}</div>${priceHTML(true)}` : priceHTML(true)}</section>`;
@@ -1439,7 +1451,7 @@
         <p class="plan-who">${esc(c.desc || '')}</p>
         <table class="plan-t term-t"><thead><tr><th>คาบที่</th><th>บท</th><th>จุดประสงค์</th><th>ชุดฝึกในเว็บ</th><th>การบ้าน</th><th>เกณฑ์ผ่าน</th></tr></thead><tbody>${rows}</tbody></table>
         <p class="small">หนึ่งคาบคิดประมาณ 50–60 นาที ปรับจำนวนคาบได้ตามเวลาเรียนจริงและพื้นฐานของนักเรียน แผนรายบทมีขั้นตอนละเอียดของแต่ละคาบ</p>
-        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · แผนการสอนโดยครูดรีม (Kaewta Hongsa)</footer>
+        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · ปรับใช้ตามบริบทของห้องเรียนได้</footer>
       </main>
       ${isAdmin() ? '' : `<section class="plan-tools">${priceHTML(true)}</section>`}`;
   }
@@ -1586,6 +1598,7 @@
       case 'plan': return pagePlan(arg, location.hash.split('/')[3]);
       case 'term': return pageTerm(arg);
       case 'news': return pageNews();
+      case 'about': return pageAbout();
       case 'admin':
         if (arg === 'results') return pageAdminResults();
         if (arg === 'student') return pageAdminStudent(location.hash.split('/').slice(3).join('/'));

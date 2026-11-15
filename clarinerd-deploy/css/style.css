@@ -662,3 +662,9 @@ main.narrow.wide { max-width: 820px; }
   main.sheet.term { max-width: none; }
   .term-t { font-size: 10.5px; }
 }
+
+.about { margin-top: 14px; }
+.about h2 { font-size: 1.1rem; margin: 0 0 6px; }
+.about p { margin: 6px 0; color: var(--ink-2); line-height: 1.7; }
+.about a { color: var(--ink); }
+.foot .links { flex-wrap: wrap; }
