@@ -389,18 +389,18 @@
     const rec = requireStudent(); if (!rec) return;
     const c = courseById(id);
     if (!c || !rec.courses.includes(id) || c.comingSoon) return go('#/courses');
-    const best = bestScores(rec.code);
+    const best = bestScores(rec.code), read = readSet(rec.code);
     const units = c.units.map((u, i) => `
       <section class="card unit">
         <div class="unit-head"><span class="num" style="background:${c.color}">${i + 1}</span>
           <div><h2>${esc(u.title)}</h2><p class="muted">${esc(u.desc || '')}</p></div></div>
-        ${u.lesson ? `<details class="lesson" ${u.sets.length ? '' : 'open'}><summary>สรุปบทเรียน</summary><div class="lesson-body">${u.lesson}</div></details>` : ''}
+        ${u.lesson ? `<a class="learn-step ${read.has(c.id + '/' + u.id) ? 'done' : ''}" href="#/lesson/${c.id}/${u.id}"><span class="ls-n">${read.has(c.id + '/' + u.id) ? '✓' : '1'}</span><div><b>เรียนก่อน: อ่านบทเรียนของบทนี้</b><span class="small muted">${read.has(c.id + '/' + u.id) ? 'อ่านแล้ว · เปิดทบทวนได้ทุกเมื่อ' : `ใช้เวลาประมาณ ${readMin(u.lesson)} นาที มีภาพโน้ตประกอบ และคำถามเช็กความเข้าใจท้ายบท`}</span></div><span class="go">${read.has(c.id + '/' + u.id) ? 'ทบทวน' : 'เริ่มเรียน'} →</span></a>` : ''}
         <ul class="sets">${u.sets.map((s) => {
           const b = best[c.id + '/' + s.id];
           const n = countQuestions(s);
           return `<li><div><b>${esc(s.title)}</b><span class="small muted"> · ${n} ข้อ${s.timeLimitMin ? ` · ${s.timeLimitMin} นาที` : ''}${s.desc ? ' · ' + esc(s.desc) : ''}</span>
             ${b !== undefined ? `<span class="score-pill ${scoreClass(b)}">ดีที่สุด ${b}%</span>` : ''}</div>
-            <div class="set-btns">${s.exam ? '' : `<button class="btn" data-play="${c.id}|${s.id}|practice">ฝึก</button>`}
+            <div class="set-btns">${s.exam ? '' : `<a class="btn ghost" href="#/learn/${c.id}/${s.id}">ดูตัวอย่าง</a><button class="btn" data-play="${c.id}|${s.id}|practice">ฝึก</button>`}
             <button class="btn ${s.exam ? 'primary' : 'ghost'}" data-play="${c.id}|${s.id}|exam">${s.exam ? 'เริ่มสอบ' : 'สอบ'}</button></div></li>`;
         }).join('')}</ul>
       </section>`).join('');
@@ -408,7 +408,8 @@
       <main>
         <a class="back" href="#/courses">← คอร์สทั้งหมด</a>
         <div class="page-head" style="--c:${c.color}"><h1 class="accent-title">${esc(c.title)}</h1><p class="muted">${esc(c.desc)}</p>
-        <p class="small muted"><b>ฝึก</b> = ตอบแล้วเห็นเฉลยทันที ตอบผิดจะได้โจทย์หัวข้อเดิมเพิ่มให้ฝึกซ้ำ · <b>สอบ</b> = ทำครบแล้วส่ง ดูคะแนนตอนจบ (ครูเห็นผลทั้งสองแบบ)</p></div>
+        <ol class="path"><li><b>เรียน</b><span>อ่านบทเรียนของบท</span></li><li><b>ดูตัวอย่าง</b><span>โจทย์ 3 ข้อพร้อมวิธีคิด</span></li><li><b>ฝึก</b><span>เฉลยทันทีทีละข้อ ผิดแล้วได้ฝึกซ้ำ</span></li><li><b>สอบ</b><span>ทำครบแล้วดูคะแนน</span></li></ol>
+        <p class="small muted">ทำตามลำดับนี้ในแต่ละบท ครูเห็นผลทั้งโหมดฝึกและโหมดสอบ</p></div>
         ${c.examInfo ? `<a class="card info-card" href="#/info/${c.id}" style="--c:${c.color}"><div><h2>ข้อมูลการสอบ ${esc(c.short)}</h2><p class="muted small">รูปแบบข้อสอบ การสมัคร วันสอบ สิ่งที่ต้องเตรียม กฎในห้องสอบ และเคล็ดลับ</p></div><span class="go">→</span></a>` : ''}
         ${(() => {
           const w = weakTags(rec.code, c.id);
@@ -424,6 +425,74 @@
       try { Music.renderStaff(el, JSON.parse(el.dataset.n)); el.dataset.done = '1'; } catch (e) { el.remove(); }
     });
     $app.querySelectorAll('details.lesson').forEach((d) => { if (d.open) drawLesson(d); d.addEventListener('toggle', () => { if (d.open) drawLesson(d); }); });
+  }
+
+  /* ---------- เรียนก่อนฝึก: หน้าบทเรียน + เช็กความเข้าใจ · หน้าตัวอย่างพร้อมวิธีคิด ---------- */
+  const readKey = (code) => 'cn_read_' + code;
+  function readSet(code) { try { return new Set(JSON.parse(localStorage.getItem(readKey(code)) || '[]')); } catch (e) { return new Set(); } }
+  function markRead(code, id) { const r = readSet(code); if (r.has(id)) return; r.add(id); try { localStorage.setItem(readKey(code), JSON.stringify([...r])); } catch (e) {} }
+  const readMin = (html) => Math.max(2, Math.round(String(html || '').replace(/<[^>]+>/g, '').length / 450));
+  /** สุ่มโจทย์ตัวอย่างจากชุด: เลือกให้ต่างหัวข้อกันเท่าที่ทำได้ */
+  function sampleFrom(sets, n) {
+    const out = [], seen = new Set(), tags = new Set();
+    for (let round = 0; round < 2 && out.length < n; round++) {
+      for (const st of sets) {
+        if (out.length >= n) break;
+        let qs = []; try { qs = buildQuestions(st); } catch (e) { qs = []; }
+        for (const q of qs) {
+          const k = qKey(q);
+          if (seen.has(k) || (round === 0 && tags.has(q.tag))) continue;
+          seen.add(k); tags.add(q.tag); out.push(q);
+          if (out.length >= n || round === 0) break;
+        }
+      }
+    }
+    return out;
+  }
+  function pageLesson(cid, uid) {
+    const rec = requireStudent(); if (!rec) return;
+    const c = courseById(cid);
+    if (!c || !rec.courses.includes(cid) || c.comingSoon) return go('#/courses');
+    const idx = c.units.findIndex((x) => x.id === uid), u = c.units[idx];
+    if (!u || !u.lesson) return go('#/course/' + cid);
+    const sets = u.sets.filter((x) => !x.exam), first = sets[0] || u.sets[0];
+    const qs = sampleFrom(sets, 3);
+    PV = { id: 'lesson', qs, resp: qs.map(() => null), key: cid + '/' + uid, code: rec.code, plain: true };
+    const nextU = c.units[idx + 1];
+    $app.innerHTML = `${studentNav(rec)}
+      <main class="lesson-page">
+        <a class="back" href="#/course/${cid}">← ${esc(c.short || c.title)}</a>
+        <div class="page-head" style="--c:${c.color}"><p class="eyebrow">บทที่ ${idx + 1} · เรียนก่อนฝึก</p><h1 class="accent-title">${esc(u.title)}</h1>${u.desc ? `<p class="muted">${esc(u.desc)}</p>` : ''}
+          <p class="small muted">อ่านประมาณ ${readMin(u.lesson)} นาที${qs.length ? ` · ท้ายบทมีคำถามเช็กความเข้าใจ ${qs.length} ข้อ` : ''}</p></div>
+        <section class="card"><div class="lesson-body">${u.lesson}</div></section>
+        ${qs.length ? `<section class="card"><h2>เช็กความเข้าใจ</h2><p class="muted small">ลองตอบจากที่เพิ่งอ่าน ไม่เก็บคะแนน ตอบแล้วเห็นเฉลยและวิธีคิดทันที ถ้าตอบไม่ได้ให้เลื่อนขึ้นไปอ่านส่วนนั้นอีกรอบ</p>
+          ${qs.map((q, i) => `<div class="pv-q" id="pv${i}"></div>`).join('')}<p class="center small muted" id="pvScore"></p></section>` : ''}
+        <section class="trial pv-cta"><div><b>อ่านจบแล้ว</b> ${first ? `ไปต่อที่ “${esc(first.title)}” ดูตัวอย่างพร้อมวิธีคิดก่อน หรือเริ่มฝึกเลยก็ได้` : nextU ? 'ไปบทถัดไปได้เลย' : ''}</div>
+          <span class="row">${first && !first.exam ? `<a class="btn" href="#/learn/${cid}/${first.id}" data-read="${cid}/${uid}">ดูตัวอย่าง</a>` : ''}${first ? `<button class="btn primary" data-read="${cid}/${uid}" data-play="${cid}|${first.id}|${first.exam ? 'exam' : 'practice'}">เริ่มฝึก</button>` : `<a class="btn primary" data-read="${cid}/${uid}" href="#/course/${cid}">กลับไปที่คอร์ส</a>`}</span></section>
+      </main>${watermark(rec)}`;
+    $app.querySelectorAll('.lesson-staff:not([data-done])').forEach((el) => { try { Music.renderStaff(el, JSON.parse(el.dataset.n)); el.dataset.done = '1'; } catch (e) { el.remove(); } });
+    qs.forEach((_, i) => pvDraw(i));
+    $app.querySelectorAll('[data-read]').forEach((b) => b.addEventListener('click', () => markRead(rec.code, b.dataset.read)));
+  }
+  function pageLearn(cid, sid) {
+    const rec = requireStudent(); if (!rec) return;
+    const f = findSet(cid, sid);
+    if (!f || !rec.courses.includes(cid) || f.course.comingSoon) return go('#/courses');
+    const qs = sampleFrom([f.set], 3);
+    if (!qs.length) return go('#/course/' + cid);
+    PV = { id: 'learn', qs, resp: qs.map((q) => q.answer), plain: true, demo: true };
+    $app.innerHTML = `${studentNav(rec)}
+      <main class="lesson-page">
+        <a class="back" href="#/course/${cid}">← ${esc(f.course.short || f.course.title)}</a>
+        <div class="page-head" style="--c:${f.course.color}"><p class="eyebrow">ดูตัวอย่างก่อนฝึก</p><h1 class="accent-title">${esc(f.set.title)}</h1>
+          <p class="muted">โจทย์ ${qs.length} ข้อจากชุดนี้ พร้อมคำตอบและวิธีคิดทีละขั้น อ่านให้เข้าใจว่าโจทย์ถามอะไรและคิดอย่างไร แล้วค่อยเริ่มฝึกเอง</p></div>
+        ${f.unit.lesson ? `<p class="small"><a href="#/lesson/${cid}/${f.unit.id}">ยังไม่ได้อ่านบทเรียนของบทนี้? อ่านก่อน →</a></p>` : ''}
+        ${qs.map((q, i) => `<section class="card"><p class="eyebrow">ตัวอย่างที่ ${i + 1}</p><div class="pv-q" id="pv${i}"></div></section>`).join('')}
+        <section class="trial pv-cta"><div><b>เข้าใจวิธีคิดแล้ว</b> ลองทำเองในโหมดฝึก ตอบแล้วเห็นเฉลยทันทีทุกข้อ</div>
+          <span class="row"><a class="btn" href="#/learn/${cid}/${sid}" data-again="1">ดูตัวอย่างชุดใหม่</a><button class="btn primary" data-play="${cid}|${sid}|practice">เริ่มฝึก</button></span></section>
+      </main>${watermark(rec)}`;
+    qs.forEach((_, i) => pvDraw(i));
+    const again = $app.querySelector('[data-again]'); if (again) again.onclick = (e) => { e.preventDefault(); window.scrollTo(0, 0); pageLearn(cid, sid); };
   }
 
   /* =========================================================
@@ -1047,13 +1116,14 @@
     const last = Store.attemptsFor(rec.code).slice(-1)[0];
     const order = last ? [...open.filter((c) => c.id === last.courseId), ...open.filter((c) => c.id !== last.courseId)] : open;
     let pick = null;
-    for (const c of order) { const st = allSets(c).find((x) => !((c.id + '/' + x.id) in best)); if (st) { pick = { c, st }; break; } }
+    for (const c of order) { const st = allSets(c).find((x) => !((c.id + '/' + x.id) in best)); if (st) { pick = { c, st, u: c.units.find((x) => x.sets.includes(st)) }; break; } }
+    const needRead = pick && pick.u && (pick.u.hasLesson || pick.u.lesson) && !readSet(rec.code).has(pick.c.id + '/' + pick.u.id);
     const wc = order.find((c) => weakTags(rec.code, c.id).length);
     if (!pick && !wc) return '';
     return `<section class="card next-card"><div><p class="eyebrow">ทำอะไรต่อดี</p>
-      ${pick ? `<p><b>${esc(pick.st.title)}</b><span class="small muted"> · ${esc(pick.c.short || pick.c.title)} · ชุดถัดไปที่ยังไม่เคยทำ</span></p>` : ''}
+      ${pick ? needRead ? `<p><b>เรียนบท “${esc(pick.u.title)}”</b><span class="small muted"> · ${esc(pick.c.short || pick.c.title)} · อ่านบทเรียนก่อน แล้วค่อยทำชุด “${esc(pick.st.title)}”</span></p>` : `<p><b>${esc(pick.st.title)}</b><span class="small muted"> · ${esc(pick.c.short || pick.c.title)} · ชุดถัดไปที่ยังไม่เคยทำ</span></p>` : ''}
       ${wc ? `<p class="small muted">จุดที่ควรทบทวนใน ${esc(wc.short || wc.title)}: ${weakTags(rec.code, wc.id).map(([t]) => esc(t)).join(' · ')}</p>` : ''}</div>
-      <div class="row">${pick ? `<button class="btn primary" data-play="${pick.c.id}|${pick.st.id}|${pick.st.exam ? 'exam' : 'practice'}">เริ่มเลย</button>` : ''}${wc ? `<button class="btn" data-play="${wc.id}|weak|practice">ฝึกจุดอ่อน</button>` : ''}</div></section>`;
+      <div class="row">${pick ? needRead ? `<a class="btn primary" href="#/lesson/${pick.c.id}/${pick.u.id}">เริ่มเรียน</a>` : `<button class="btn primary" data-play="${pick.c.id}|${pick.st.id}|${pick.st.exam ? 'exam' : 'practice'}">เริ่มเลย</button>` : ''}${wc ? `<button class="btn" data-play="${wc.id}|weak|practice">ฝึกจุดอ่อน</button>` : ''}</div></section>`;
   }
 
   function pageAdminStudent(code) {
@@ -1316,12 +1386,12 @@
       const cls = !done ? '' : j === q.answer ? 'right' : j === r ? 'wrong' : 'dim';
       return `<button class="choice ${cls}" data-pv="${i}|${j}" ${done ? 'disabled' : ''}><span class="letter">${'กขคง'[j] || j + 1}</span><span>${esc(ch)}</span></button>`;
     }).join('');
-    return `<span class="tag lv ${LV[q.lv] || ''}">ระดับ${esc(q.lv)}</span> <span class="tag">${esc(q.tag)}</span>
+    return `${PV.plain ? '' : `<span class="tag lv ${LV[q.lv] || ''}">ระดับ${esc(q.lv)}</span> `}<span class="tag">${esc(q.tag)}</span>
       <h3>${i + 1}. ${esc(q.q)}</h3>
       ${q.notation ? '<div class="staff pv-staff"></div>' : ''}
       ${q.audio ? `<div class="audio-box"><button class="btn audio" data-act="pv-listen" data-i="${i}">▶ ฟังเสียง</button><span class="small muted">กดฟังซ้ำได้</span></div>` : ''}
       <div class="choices">${choices}</div>
-      ${done ? `<div class="feedback ${r === q.answer ? 'ok' : 'no'}"><b>${r === q.answer ? '✓ ถูกต้อง!' : '✗ ยังไม่ถูก คำตอบคือ “' + esc(q.choices[q.answer]) + '”'}</b>${explainHTML(q, true)}</div>` : ''}`;
+      ${done ? `<div class="feedback ${r === q.answer ? 'ok' : 'no'}"><b>${PV.demo ? 'คำตอบ: ' + esc(q.choices[q.answer]) : r === q.answer ? '✓ ถูกต้อง!' : '✗ ยังไม่ถูก คำตอบคือ “' + esc(q.choices[q.answer]) + '”'}</b>${explainHTML(q, true)}</div>` : ''}`;
   }
   function pvDraw(i) {
     const el = document.getElementById('pv' + i), q = PV.qs[i]; if (!el) return;
@@ -1330,7 +1400,8 @@
     if (q.ex && q.ex.img) el.querySelectorAll('.ex-img').forEach((x) => { const im = q.ex.img[+x.dataset.img]; if (im) Music.renderStaff(x, im.n); });
     const n = PV.resp.filter((x) => x !== null).length, ok = PV.resp.filter((x, k) => x === PV.qs[k].answer).length;
     const sc = document.getElementById('pvScore');
-    if (sc) sc.textContent = n ? `ทำแล้ว ${n}/${PV.qs.length} ข้อ · ถูก ${ok} ข้อ` : '';
+    if (sc) sc.textContent = PV.demo ? '' : n ? `ทำแล้ว ${n}/${PV.qs.length} ข้อ · ถูก ${ok} ข้อ` : '';
+    if (PV.key && n === PV.qs.length) markRead(PV.code, PV.key);
   }
   function pagePreview(id) {
     const m = PREVIEW[id];
@@ -1725,6 +1796,8 @@
       case 'teacher': return pageTeacherLogin();
       case 'courses': return pageCourses();
       case 'course': return pageCourse(arg);
+      case 'lesson': return pageLesson(arg, location.hash.split('/')[3]);
+      case 'learn': return pageLearn(arg, location.hash.split('/')[3]);
       case 'play': return pagePlay();
       case 'result': return pageResult(arg);
       case 'me': return pageMe();

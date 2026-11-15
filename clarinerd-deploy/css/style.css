@@ -23,7 +23,7 @@
   --mid-bg: #2e2410;
   --low-bg: #2f1418;
   --serif: 'Anuphan', 'Sukhumvit Set', 'Helvetica Neue', Arial, sans-serif;
-  --sans: 'Anuphan', 'Sukhumvit Set', 'Helvetica Neue', Arial, sans-serif;
+  --sans: 'Anuphan', 'Sukhumvit Set', 'Helvetica Neue', Arial, sans-serif, 'Noto Music';
   --r: 14px;
   color-scheme: dark;
 }
@@ -703,3 +703,21 @@ main.sheet.cert { padding: 28px; text-align: center; }
 .about .pv-get b { color: var(--ink); }
 
 .mini-sel { width: auto; min-width: 120px; padding: 4px 8px; font-size: .85rem; margin: 0; }
+
+/* ---------- เรียนก่อนฝึก ---------- */
+.learn-step { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin: 4px 0 12px; border-radius: 12px; text-decoration: none; color: var(--ink); background: linear-gradient(90deg, rgba(30,215,96,.2), rgba(30,215,96,.05)); border: 1px solid rgba(30,215,96,.4); }
+.learn-step:hover { border-color: var(--gold); }
+.learn-step .ls-n { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: #0b0b0d; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.learn-step div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.learn-step .go { flex: none; font-weight: 700; font-size: .9rem; color: var(--gold); white-space: nowrap; }
+.learn-step.done { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.1); }
+.learn-step.done .ls-n { background: var(--good-bg); color: var(--good); }
+.learn-step.done .go { color: var(--ink-2); }
+.path { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 6px; padding: 0; counter-reset: p; }
+.path li { counter-increment: p; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.05); display: flex; flex-direction: column; gap: 2px; }
+.path li b::before { content: counter(p) " "; color: var(--gold); }
+.path li span { font-size: .78rem; color: var(--ink-2); line-height: 1.4; }
+@media (max-width: 640px) { .path { grid-template-columns: 1fr 1fr; } .learn-step { flex-wrap: wrap; } .learn-step .go { width: 100%; text-align: right; } }
+main.lesson-page { max-width: 860px; }
+main.lesson-page .lesson-body { font-size: 1.02rem; line-height: 1.75; padding-bottom: 0; }
+main.lesson-page .pv-q + .pv-q { margin-top: 26px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.08); }

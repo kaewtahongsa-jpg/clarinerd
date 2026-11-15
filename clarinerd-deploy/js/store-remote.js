@@ -124,11 +124,11 @@
   async function prepare(page, arg) {
     await boot();
     const s = session();
-    if (s && s.type === 'student' && ['', 'courses', 'course', 'play', 'result', 'me', 'info', 'questions', 'report', 'cert'].includes(page)) {
+    if (s && s.type === 'student' && ['', 'courses', 'course', 'lesson', 'learn', 'play', 'result', 'me', 'info', 'questions', 'report', 'cert'].includes(page)) {
       await loadStudent(page === 'courses' || page === 'me' || page === 'report');
       if (['courses', 'me', 'questions'].includes(page)) await loadMyQuestions();
       if (page === 'courses') await loadBoard();
-      if (page === 'course' || page === 'info') await loadCourse(arg);
+      if (['course', 'info', 'lesson', 'learn'].includes(page)) await loadCourse(arg);
       if (page === 'result') { const a = C.attempts.find((x) => x.id === arg); if (a) await loadCourse(a.courseId); }
     }
     if (s && s.type === 'admin' && (page === 'admin' || page === '')) {
