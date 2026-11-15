@@ -245,7 +245,7 @@
     const t = (id, label) => `<a href="#/admin/${id}" class="${active === id ? 'on' : ''}">${label}</a>`;
     const open = Store.adminQuestions ? Store.adminQuestions().filter((q) => !q.answer).length : 0;
     const owner = Store.role ? Store.role() === 'owner' && Store.staff && Store.staff() : false;
-    return header(`${t('codes', 'รหัสนักเรียน')}${t('results', 'ผลคะแนน')}${t('questions', 'คำถาม' + (open ? `<span class="badge">${open}</span>` : ''))}${t('teach', 'สอน')}${t('homework', 'การบ้าน')}${owner ? t('staff', 'ครู') + t('usage', 'การใช้งาน') : ''}${t('settings', 'ตั้งค่า')}<button class="link" data-act="logout">ออก</button>`);
+    return header(`${t('codes', Store.role && Store.role() === 'teacher' ? 'นักเรียนของฉัน' : 'รหัสนักเรียน')}${t('results', 'ผลคะแนน')}${t('questions', 'คำถาม' + (open ? `<span class="badge">${open}</span>` : ''))}${t('teach', 'สอน')}${t('homework', 'การบ้าน')}${owner ? t('staff', 'ครู') + t('usage', 'การใช้งาน') : ''}${t('settings', 'ตั้งค่า')}<button class="link" data-act="logout">ออก</button>`);
   }
 
   /* ---------------- ตรวจสิทธิ์ ---------------- */
@@ -808,20 +808,44 @@
   }
 
   const staffName = (id) => { const s = (Store.staff && Store.staff()) || []; const x = s.find((a) => a.user_id === id); return x ? x.name || x.email : '—'; };
+  /** ครูสมาชิก: รายชื่อนักเรียนที่ผูกกับตัวเอง (ดูได้อย่างเดียว เจ้าของเป็นคนออกรหัส) */
+  function pageMyStudents() {
+    const list = Store.codes(), att = Store.attempts();
+    $app.innerHTML = `${adminNav('codes')}
+      <main>
+        <div class="page-head"><h1>นักเรียนของฉัน</h1><p class="muted">นักเรียนสมัครสมาชิก Clarinerd ของตัวเอง แล้วแจ้งชื่อครูตอนสมัคร ครูดรีมจะผูกนักเรียนเข้ามาในรายชื่อนี้ให้</p></div>
+        <section class="trial pv-cta"><div><b>ให้นักเรียนสมัครอย่างไร</b> ส่งข้อความนี้ให้นักเรียนหรือผู้ปกครอง แล้วให้บอกชื่อครูตอนทัก LINE</div><button class="btn primary" id="invCopy">คัดลอกข้อความชวนนักเรียน</button></section>
+        <section class="card">
+          <h2>รายชื่อ (${list.length})</h2>
+          ${list.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>คอร์ส</th><th>ใช้ได้ถึง</th><th>สถานะ</th><th>ทำแล้ว</th><th></th></tr></thead><tbody>
+          ${list.map((c) => `<tr><td><b>${esc(c.name)}</b></td><td class="small">${c.courses.map((x) => esc(courseById(x)?.short || x)).join(', ')}</td><td>${c.expires ? fmtDate(c.expires) : 'ไม่หมดอายุ'}</td><td>${codeStatus(c)}</td>
+            <td><a href="#/admin/student/${encodeURIComponent(c.code)}">${att.filter((a) => a.code === c.code).length} ครั้ง</a></td>
+            <td class="actions"><a href="#/admin/report/${encodeURIComponent(c.code)}">รายงาน 30 วัน</a></td></tr>`).join('')}
+          </tbody></table></div>` : '<p class="muted">ยังไม่มีนักเรียนที่ผูกกับบัญชีนี้ เมื่อนักเรียนสมัครและแจ้งชื่อครูแล้ว รายชื่อจะขึ้นที่นี่</p>'}
+        </section>
+      </main>`;
+    const me = ((Store.staff && Store.staff()) || []).find((a) => a.role === 'teacher');
+    const site = location.origin.includes('localhost') ? 'https://clarinerd.netlify.app' : location.origin;
+    document.getElementById('invCopy').onclick = (e) => copyText(e.target, `ครูใช้เว็บ Clarinerd ให้ฝึกทำข้อสอบดนตรีและส่งการบ้าน\nสมัครสมาชิก ${PRICE} บาทต่อเดือน ทดลองฟรี 7 วัน\n1) ดูตัวอย่างที่ ${site}\n2) ทัก LINE k.kaewta19 แล้วบอกว่าเป็นนักเรียนของ${me && me.name ? ' ' + me.name : 'ครูคนไหน'}\nเมื่อได้รหัสแล้ว ครูจะเห็นคะแนนและการบ้านในระบบ`);
+  }
   function pageAdminCodes() {
     if (!requireAdmin()) return;
+    if (Store.role && Store.role() === 'teacher') return pageMyStudents();
     const tCol = Store.role && Store.role() === 'owner' && Store.staff && Store.staff() && Store.staff().length > 1;
+    const staffAll = tCol ? Store.staff() : [], ownerId = (staffAll.find((a) => a.role === 'owner') || {}).user_id || '';
+    const tOpts = (sel) => staffAll.map((a) => `<option value="${a.user_id}" ${a.user_id === (sel || ownerId) ? 'selected' : ''}>${esc(a.role === 'owner' ? 'ไม่มีครู (ดรีมดูแลเอง)' : a.name || a.email)}</option>`).join('');
     const list = Store.codes();
     const att = Store.attempts();
     $app.innerHTML = `${adminNav('codes')}
       <main>
-        <div class="page-head"><h1>รหัสนักเรียน</h1><p class="muted">สร้างรหัสให้นักเรียนหลังจากชำระเงินแล้ว แล้วส่งรหัสให้นักเรียนทาง LINE</p></div>
+        <div class="page-head"><h1>รหัสนักเรียน</h1><p class="muted">สร้างรหัสให้นักเรียนหลังจากชำระเงินแล้ว แล้วส่งรหัสให้นักเรียนทาง LINE${tCol ? ' ถ้านักเรียนบอกว่าเรียนกับครูสมาชิกคนไหน ให้เลือกชื่อครูในช่อง “ครูผู้ดูแล” ครูคนนั้นจะเห็นคะแนนของนักเรียน' : ''}</p></div>
         <section class="card">
           <h2>สร้างรหัสใหม่</h2>
           <form id="newCode" class="form-grid">
             <label>ชื่อนักเรียน<input id="nName" required placeholder="เช่น น้องมิว ม.6"></label>
             <label>ใช้ได้ถึงวันที่<input id="nExp" type="date" value="${Store.addDays(7)}"><span class="small muted"><button type="button" class="link" data-exp="7">ทดลอง 7 วัน</button> · <button type="button" class="link" data-exp="30">+1 เดือน</button> · <button type="button" class="link" data-exp="90">+3 เดือน</button> · <button type="button" class="link" data-exp="180">+6 เดือน</button> · <button type="button" class="link" data-exp="365">+1 ปี</button> · <button type="button" class="link" data-exp="0">ไม่หมดอายุ</button></span></label>
             <fieldset><legend>เปิดคอร์ส</legend>${COURSES.map((c) => `<label class="check"><input type="checkbox" name="nc" value="${c.id}" ${c.id === 'tpat22' ? 'checked' : ''}> ${esc(c.title)}</label>`).join('')}</fieldset>
+            ${tCol ? `<label>ครูผู้ดูแล<select id="nTeacher">${tOpts(ownerId)}</select></label>` : ''}
             <label>หมายเหตุ (นักเรียนไม่เห็น)<input id="nNote" placeholder="เช่น โอนแล้ว 5 พ.ย."></label>
             <button class="btn primary">สร้างรหัส</button>
           </form>
@@ -832,7 +856,7 @@
           <div class="tbl-wrap"><table class="tbl" id="codeTbl"><thead><tr><th>ชื่อ</th>${tCol ? '<th>ครู</th>' : ''}<th>รหัส</th><th>คอร์ส</th><th>ใช้ได้ถึง</th><th>สถานะ</th><th>ทำแล้ว</th><th></th></tr></thead><tbody>
           ${list.map((c) => `<tr data-row="${esc((c.name + ' ' + c.code).toLowerCase())}">
             <td><b>${esc(c.name)}</b>${c.nick ? `<br><span class="small muted">ชื่อบนกระดาน: ${esc(c.nick)}</span>` : ''}${c.note ? `<br><span class="small muted">${esc(c.note)}</span>` : ''}</td>
-            ${tCol ? `<td class="small">${esc(staffName(c.teacherId))}</td>` : ''}
+            ${tCol ? `<td><select class="mini-sel" data-teacher-of="${esc(c.code)}">${tOpts(c.teacherId)}</select></td>` : ''}
             <td><code>${esc(c.code)}</code></td>
             <td>${COURSES.map((x) => `<label class="mini"><input type="checkbox" data-course="${esc(c.code)}|${x.id}" ${c.courses.includes(x.id) ? 'checked' : ''}>${esc(x.short)}</label>`).join('')}</td>
             <td><input type="date" class="mini-date" data-exp-of="${esc(c.code)}" value="${c.expires || ''}"></td>
@@ -852,7 +876,7 @@
       const courses = [...document.querySelectorAll('input[name=nc]:checked')].map((x) => x.value);
       if (!courses.length) return alert('เลือกอย่างน้อย 1 คอร์ส');
       let c;
-      try { c = await Store.createCode({ name: document.getElementById('nName').value.trim(), courses, expires: exp.value || null, note: document.getElementById('nNote').value.trim() }); }
+      try { c = await Store.createCode({ name: document.getElementById('nName').value.trim(), courses, expires: exp.value || null, note: document.getElementById('nNote').value.trim(), teacherId: (document.getElementById('nTeacher') || {}).value || null }); }
       catch (err) { return alert('สร้างรหัสไม่สำเร็จ: ' + err.message); }
       pageAdminCodes();
       document.getElementById('newOut').innerHTML = `<div class="new-code"><p>สร้างรหัสให้ <b>${esc(c.name)}</b> แล้ว</p><p class="big-code">${esc(c.code)}</p>
@@ -871,6 +895,7 @@
       await Store.updateCode(code, { courses });
     }));
     document.querySelectorAll('[data-exp-of]').forEach((inp) => inp.onchange = safe(async () => { await Store.updateCode(inp.dataset.expOf, { expires: inp.value || null }); pageAdminCodes(); }));
+    document.querySelectorAll('[data-teacher-of]').forEach((sel) => sel.onchange = safe(async () => { await Store.updateCode(sel.dataset.teacherOf, { teacher_id: sel.value }); }));
     document.querySelectorAll('[data-toggle]').forEach((b) => b.onclick = safe(async () => { const c = Store.findCode(b.dataset.toggle); await Store.updateCode(c.code, { active: !c.active }); pageAdminCodes(); }));
     document.querySelectorAll('[data-del]').forEach((b) => b.onclick = safe(async () => {
       const c = Store.findCode(b.dataset.del);
@@ -1117,11 +1142,12 @@
     if (!(Store.role && Store.role() === 'owner' && Store.staff && Store.staff())) return go('#/admin/codes');
     const staff = Store.staff(), inv = Store.invites();
     const codes = Store.codes();
+    const until = (id) => ((staff.find((a) => a.user_id === id) || {}).paid_until || '');
     const rows = [...staff.map((a) => ({ email: a.email, name: a.name, role: a.role, id: a.user_id, account: true })),
       ...inv.filter((i) => !staff.some((a) => (a.email || '').toLowerCase() === i.email)).map((i) => ({ email: i.email, name: i.name, role: i.role, account: false }))];
     $app.innerHTML = `${adminNav('staff')}
       <main>
-        <div class="page-head"><h1>ครูในสังกัด</h1><p class="muted">ครูแต่ละคนเห็นและจัดการเฉพาะรหัสนักเรียน คะแนน และคำถามของนักเรียนตัวเอง · อัปโหลดเนื้อหาได้เฉพาะเจ้าของ</p></div>
+        <div class="page-head"><h1>ครูสมาชิก</h1><p class="muted">ครูสมาชิกใช้แผนการสอน สอนหน้าห้อง ใบงาน และเห็นคะแนนของนักเรียนที่ผูกกับตัวเอง แต่สร้างหรือแก้รหัสนักเรียนไม่ได้ ดรีมเป็นคนออกรหัสทุกคนที่หน้า “รหัสนักเรียน” · บัญชีครูใหม่ได้ทดลอง 7 วัน เมื่อครูโอนแล้วให้เลื่อนวันในช่อง “ใช้ได้ถึง”</p></div>
         <section class="card">
           <h2>เพิ่มครู</h2>
           <form id="stForm" class="form-grid">
@@ -1134,13 +1160,14 @@
         </section>
         <section class="card">
           <h2>รายชื่อ (${rows.length})</h2>
-          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>อีเมล</th><th>บทบาท</th><th>บัญชี</th><th>นักเรียน</th><th></th></tr></thead><tbody>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>อีเมล</th><th>บทบาท</th><th>บัญชี</th><th>ใช้ได้ถึง</th><th>นักเรียน</th><th></th></tr></thead><tbody>
           ${rows.map((r) => `<tr><td><b>${esc(r.name || '—')}</b></td><td>${esc(r.email || '')}</td><td>${r.role === 'owner' ? 'เจ้าของ' : 'ครู'}</td>
             <td>${r.account ? '<span class="status on">พร้อมใช้</span>' : '<span class="status off">รอสร้างบัญชีใน Supabase</span>'}</td>
+            <td>${r.role === 'owner' ? '—' : r.id ? `<input type="date" class="mini-date" data-until="${r.id}" value="${until(r.id)}">${until(r.id) && until(r.id) < Store.today() ? ' <span class="status off">หมดอายุ</span>' : ''}` : '<span class="small muted">ตั้งได้หลังครูสร้างบัญชี</span>'}</td>
             <td>${r.id ? codes.filter((c) => c.teacherId === r.id).length : 0} คน</td>
             <td class="actions">${r.role === 'owner' ? '' : `<button class="link danger" data-rmst="${esc(r.email)}">เอาออก</button>`}</td></tr>`).join('')}
           </tbody></table></div>
-          <p class="small muted">เอาครูออก = ครูคนนั้นเข้าหน้าครูไม่ได้อีก (รหัสนักเรียนที่เขาสร้างยังใช้ได้ตามปกติ และเจ้าของยังเห็นทั้งหมด)</p>
+          <p class="small muted">เว้นช่อง “ใช้ได้ถึง” ว่าง = ไม่หมดอายุ · เอาครูออก = ครูคนนั้นเข้าหน้าครูไม่ได้อีก นักเรียนของครูคนนั้นยังใช้รหัสได้ตามปกติ และกลับมาอยู่ในความดูแลของดรีม</p>
         </section>
       </main>`;
     document.getElementById('stForm').onsubmit = async (e) => {
@@ -1152,6 +1179,7 @@
         alert(r && r.hasAccount ? 'เพิ่มแล้ว — ครูคนนี้มีบัญชีอยู่แล้ว เข้าสู่ระบบได้เลย' : 'เพิ่มแล้ว — อย่าลืมสร้างบัญชีใน Supabase (Authentication → Add user → Send invitation) ด้วยอีเมลเดียวกัน');
       } catch (x) { err.textContent = 'เพิ่มไม่สำเร็จ: ' + x.message; }
     };
+    $app.querySelectorAll('[data-until]').forEach((inp) => (inp.onchange = async () => { try { await Store.setStaffUntil(inp.dataset.until, inp.value || null); pageAdminStaff(); } catch (x) { alert('บันทึกไม่สำเร็จ: ' + x.message); } }));
     $app.querySelectorAll('[data-rmst]').forEach((b) => (b.onclick = async () => {
       if (!confirm(`เอา ${b.dataset.rmst} ออกจากครูในสังกัด?`)) return;
       try { await Store.removeStaff(b.dataset.rmst); await Store.prepare('admin'); pageAdminStaff(); } catch (x) { alert('ไม่สำเร็จ: ' + x.message); }

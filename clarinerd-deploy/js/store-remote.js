@@ -108,7 +108,7 @@
     if (C.v2Admin) {
       const since = new Date(Date.now() - 7 * 864e5).toISOString();
       const [st, inv, lg] = await Promise.all([
-        sb.from('admins').select('user_id,email,role,name'),
+        sb.from('admins').select('*'),
         C.role === 'owner' ? sb.from('staff_invites').select('*') : Promise.resolve({ data: [] }),
         sb.from('access_log').select('code,kind,n,at').gte('at', since).order('at', { ascending: false }).limit(5000),
       ]);
@@ -162,7 +162,7 @@
     const { error } = await sb.auth.signInWithPassword({ email, password: pw });
     if (error) return { ok: false, reason: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' };
     const ok = await rpc('is_admin', {});
-    if (!ok) { await sb.auth.signOut(); return { ok: false, reason: 'บัญชีนี้ไม่ได้เป็นผู้ดูแลระบบ' }; }
+    if (!ok) { await sb.auth.signOut(); return { ok: false, reason: 'บัญชีนี้ยังไม่ได้เป็นสมาชิกครู หรือสมาชิกหมดอายุแล้ว ทัก LINE k.kaewta19 เพื่อต่ออายุ' }; }
     setSession({ type: 'admin' });
     return { ok: true };
   }
@@ -176,9 +176,10 @@
     const part = () => Array.from({ length: 4 }, () => A[crypto.getRandomValues(new Uint32Array(1))[0] % A.length]).join('');
     return `CN-${part()}-${part()}`;
   }
-  async function createCode({ name, courses, expires, note }) {
+  async function createCode({ name, courses, expires, note, teacherId }) {
     for (let i = 0; i < 5; i++) {
       const row = { code: newCodeStr(), name, courses, expires: expires || null, note: note || '' };
+      if (teacherId) row.teacher_id = teacherId;
       const { data, error } = await sb.from('access_codes').insert(row).select().single();
       if (!error) { const c = rowToCode(data); C.codes.unshift(c); return c; }
       if (error.code !== '23505') fail(error, 'createCode'); // 23505 = รหัสซ้ำ → สุ่มใหม่
@@ -188,7 +189,7 @@
   async function updateCode(code, patch) {
     const { error } = await sb.from('access_codes').update(patch).eq('code', code);
     fail(error, 'updateCode');
-    const c = C.codes.find((x) => x.code === code); if (c) Object.assign(c, patch);
+    const c = C.codes.find((x) => x.code === code); if (c) { Object.assign(c, patch); if ('teacher_id' in patch) { c.teacherId = patch.teacher_id; delete c.teacher_id; } }
   }
   async function deleteCode(code) {
     const { error } = await sb.from('access_codes').delete().eq('code', code);
@@ -258,6 +259,11 @@
   }
   async function addStaff(email, name) { return rpc('add_staff', { p_email: email, p_name: name }); }
   async function removeStaff(email) { return rpc('remove_staff', { p_email: email }); }
+  async function setStaffUntil(userId, date) {
+    const { error } = await sb.from('admins').update({ paid_until: date || null }).eq('user_id', userId);
+    fail(error, 'setStaffUntil');
+    const a = (C.staff || []).find((x) => x.user_id === userId); if (a) a.paid_until = date || null;
+  }
 
   function exportAll() { return JSON.stringify({ codes: C.codes, attempts: C.allAttempts, exported: new Date().toISOString() }, null, 1); }
 
@@ -278,7 +284,7 @@
     adminQuestions: () => C.adminQ,
     questionsReady: () => C.qReady,
     board: () => C.board || null, setBoardProfile, loadCourseAdmin,
-    isV2, bankCount, bankTags, fetchQuestions, addStaff, removeStaff,
+    isV2, bankCount, bankTags, fetchQuestions, addStaff, removeStaff, setStaffUntil,
     role: () => C.role,
     staff: () => C.staff,
     invites: () => C.invites,
