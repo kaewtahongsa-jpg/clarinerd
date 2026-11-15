@@ -1466,7 +1466,7 @@
 
   /* ---------- ห้องเตรียมสอน: แผนการสอนรายบท + แผนรายเทอม ---------- */
   const PLANS = window.LESSON_PLANS || {};
-  const PRICE = 390; // บาทต่อเดือน
+  const PRICE = 90; // บาทต่อเดือน
   const planOf = (c, u) => (PLANS[c] || {})[u];
   const isAdmin = () => { const s = Store.session(); return !!(s && s.type === 'admin'); };
   /** แผนที่เปิดอ่านฟรี = บทแรกของแต่ละคอร์ส (ไม่นับคาบทดสอบ) */
