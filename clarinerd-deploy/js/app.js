@@ -280,7 +280,7 @@
             <h1>ที่ฝึกทำข้อสอบดนตรี<br>ด้วยตัวเอง <em>ทุกวัน</em></h1>
             <p class="lead">ดรีมทำเว็บนี้ให้น้อง ๆ มีที่ฝึกทำข้อสอบ และทบทวนเนื้อหาเองได้ระหว่างรอเรียน ทุกข้อมีเฉลยอธิบายเป็นขั้นตอน ตอบผิดตรงไหนจะได้ฝึกเรื่องนั้นซ้ำ และดรีมเห็นคะแนนของทุกคน เลยช่วยดูได้ว่าควรฝึกอะไรต่อ</p>
             <p class="chips"><span>เฉลยละเอียดทุกข้อ</span><span>ไทย | English</span><span>มีภาพโน้ตประกอบ</span><span>ฝึกซ้ำเรื่องที่ผิด</span></p>
-            <p class="trial"><b>ทดลองใช้ฟรี 7 วัน</b> — ทัก LINE <a href="${LINE}" target="_blank" rel="noopener">k.kaewta19</a> บอกคอร์สที่อยากลอง แล้วดรีมจะส่งรหัสให้</p>
+            <p class="trial"><b>ทดลองใช้ฟรี 7 วัน</b> — ทัก LINE <a href="${LINE}" target="_blank" rel="noopener">k.kaewta19</a> บอกคอร์สที่อยากลอง แล้วดรีมจะส่งรหัสให้ จากนั้นสมาชิก <b>${PRICE} บาท/เดือน</b> เข้าได้ทุกคอร์ส มีเนื้อหาใหม่ทุกสัปดาห์</p>
           </div>
           <div class="side">
             <div class="teacher"><img src="img/dream.jpg" alt="ครูดรีม Kaewta Hongsa"><div><b>Kaewta Hongsa (Dream)</b><span>ครูคลาริเน็ต · ABRSM · Audition prep</span></div></div>
@@ -297,6 +297,9 @@
           <h2>คอร์สที่เปิดสอน</h2>
           <div class="posters">${POSTERS.map(([id, k, big, sub]) => `<a class="poster" href="#/preview/${id}" style="--c:${PREVIEW[id].color}"><span>${k}</span><b>${big}</b><i>${sub}</i><u>ดูตัวอย่าง →</u></a>`).join('')}</div>
         </section>
+        <section class="shelf for-t"><div class="card"><div><p class="eyebrow">สำหรับครูดนตรี</p><h2>แผนการสอน ใบงาน และโจทย์ฉายหน้าห้อง พร้อมใช้</h2><p class="muted">ไม่ต้องเตรียมสไลด์ ไม่ต้องพิมพ์โน้ตเอง แผนบทแรกของทุกคอร์สเปิดอ่านฟรี</p></div><div class="row"><a class="btn primary" href="#/teachers">ดูเครื่องมือครู</a><a class="btn" href="#/plans">ดูแผนการสอน</a></div></div></section>
+        <section class="shelf"><h2>อัปเดตทุกสัปดาห์</h2><section class="card">${newsHTML(1)}<p class="small"><a href="#/news">ดูอัปเดตทั้งหมด →</a></p></section></section>
+        ${priceHTML(false)}
         <section class="yt">
           <div><h2>ดูคลิปสอนคลาริเน็ตบน YouTube</h2><p>เทคนิคการเป่า สเกล และเรื่องการเตรียมสอบ — ช่อง Clarinerd (@Clarinerdth)</p></div>
           <a class="btn" href="${YT}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12c0 1.6.2 3.2.5 4.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.3-1.6.5-3.2.5-4.8s-.2-3.2-.5-4.8zM9.8 15.2V8.8l5.7 3.2-5.7 3.2z"/></svg>ไปที่ช่อง</a>
@@ -374,6 +377,7 @@
         <p class="muted">เลือกคอร์สที่ต้องการเรียน ${rec.expires ? `· รหัสใช้ได้ถึง ${fmtDate(rec.expires)}` : ''}</p></div>
         <div class="dash">${streakHTML(Store.attemptsFor(rec.code))}${boardHTML(rec)}</div>
         <div class="grid courses">${cards}</div>
+        ${(window.NEWS || []).length ? `<section class="card news-card"><h2>ใหม่สัปดาห์นี้</h2>${newsHTML(1)}<p class="small"><a href="#/news">ดูอัปเดตทั้งหมด →</a></p></section>` : ''}
       </main>${footer()}`;
   }
 
@@ -1326,19 +1330,25 @@
       <div class="landing tland">
         <section class="pv-hero" style="--c:#1ed760"><p class="eyebrow">สำหรับครูดนตรี</p>
           <h1>เปิดแล้วสอนได้เลย<br>ไม่ต้องเตรียมสไลด์</h1>
-          <p class="lead">โจทย์ทฤษฎีดนตรี ภาพโน้ต เสียงฝึกหู และเฉลยละเอียดสองภาษา พร้อมใช้ในห้องเรียน ลองกดดูข้างล่างได้เลย ไม่ต้องสมัคร ไม่ต้องมีรหัส</p></section>
+          <p class="lead">แผนการสอนรายบท โจทย์ทฤษฎีดนตรี ภาพโน้ต เสียงฝึกหู ใบงาน และเฉลยละเอียดสองภาษา พร้อมใช้ในห้องเรียน ลองกดดูข้างล่างได้เลย ไม่ต้องสมัคร ไม่ต้องมีรหัส</p><p class="chips"><span>แผนการสอนพร้อมใช้</span><span>สอนหน้าห้อง</span><span>ใบงานพิมพ์ได้</span><span>ใหม่ทุกสัปดาห์</span></p></section>
         <section class="shelf"><h2>ลองสอนหน้าห้อง</h2>
           <p class="muted">ฉายขึ้นจอหรือเปิดบนแท็บเล็ต โจทย์ตัวใหญ่ ให้นักเรียนตอบพร้อมกัน แล้วกดเฉลยเมื่อพร้อม เลือกคอร์สเพื่อลอง 5 ข้อ</p>
           <div class="tdemo">${POSTERS.map(([id, k, big]) => `<a href="#/teach-demo/${id}" style="--c:${PREVIEW[id].color}"><span>${k}</span><b>${big.replace('<br>', ' ')}</b><i>ลองสอน →</i></a>`).join('')}</div></section>
         <section class="shelf"><h2>ลองพิมพ์ใบงาน</h2>
           <p class="muted">ใบงาน A4 พร้อมภาพโน้ต ช่องชื่อ–คะแนน และหน้าเฉลยแยก กดพิมพ์หรือบันทึกเป็น PDF ได้ทันที</p>
           <div class="tdemo">${POSTERS.filter(([id]) => !PREVIEW[id].gen).map(([id, k, big]) => `<a href="#/sheet-demo/${id}" style="--c:${PREVIEW[id].color}"><span>${k}</span><b>${big.replace('<br>', ' ')}</b><i>ดูใบงาน →</i></a>`).join('')}</div></section>
+        <section class="shelf"><h2>แผนการสอนพร้อมใช้</h2>
+          <p class="muted">แผนรายบทบอกเวลาเป็นนาที ขั้นตอนในคาบ คำถามที่ใช้ถาม จุดที่นักเรียนมักเข้าใจผิดพร้อมวิธีแก้ การบ้าน และเกณฑ์ผ่าน แผนบทแรกของทุกคอร์สและแผนรายเทอมเปิดอ่านและพิมพ์ได้ฟรี</p>
+          <div class="tdemo">${planCourses().map((c) => `<a href="#/plan/${c.id}/${freePlan(c.id)}" style="--c:${c.color}"><span>แผนบทแรก · ฟรี</span><b>${esc(c.short || c.title)}</b><i>อ่านแผน →</i></a>`).join('')}</div>
+          <p class="center" style="margin-top:14px"><a class="btn" href="#/plans">ดูแผนการสอนทั้งหมด</a></p></section>
         <section class="shelf"><h2>เมื่อมีบัญชีครู</h2>
           <div class="pv-cols">
-            <section class="card"><h2>ในห้องเรียน</h2><ul class="pv-get"><li>สอนหน้าห้องได้ทุกชุดในทุกคอร์ส ไม่จำกัดจำนวนข้อ</li><li>ใบงานเลือกหัวข้อและจำนวนข้อได้ สุ่มชุดใหม่ได้ไม่ซ้ำ</li><li>โจทย์สุ่มสร้างใหม่ทุกครั้ง ใช้ซ้ำกับหลายห้องได้</li></ul></section>
+            <section class="card"><h2>ในห้องเรียน</h2><ul class="pv-get"><li>แผนการสอนรายบทฉบับเต็มทุกบท และแผนรายเทอมทุกคอร์ส</li><li>สอนหน้าห้องได้ทุกชุดในทุกคอร์ส ไม่จำกัดจำนวนข้อ</li><li>ใบงานเลือกหัวข้อและจำนวนข้อได้ สุ่มชุดใหม่ได้ไม่ซ้ำ</li><li>โจทย์สุ่มสร้างใหม่ทุกครั้ง ใช้ซ้ำกับหลายห้องได้</li></ul></section>
             <section class="card"><h2>นอกห้องเรียน</h2><ul class="pv-get"><li>สร้างรหัสให้นักเรียนของตัวเอง ให้ฝึกเองที่บ้าน</li><li>เห็นคะแนนรายคน หัวข้อที่อ่อน และใครหายไปหลายวัน</li><li>นักเรียนส่งคำถามใต้เฉลย ครูตอบได้ในระบบ</li></ul></section>
           </div></section>
-        <section class="trial pv-cta"><div><b>อยากใช้กับนักเรียนของตัวเอง?</b> ทัก LINE บอกว่าเป็นครูและสอนอะไร ดรีมจะเปิดบัญชีครูให้ทดลองใช้ฟรี</div>
+        ${priceHTML(true)}
+        <section class="shelf"><h2>อัปเดตทุกสัปดาห์</h2><section class="card">${newsHTML(1)}</section></section>
+        <section class="trial pv-cta"><div><b>อยากใช้กับนักเรียนของตัวเอง?</b> ทัก LINE บอกว่าเป็นครูและสอนอะไร ดรีมจะเปิดบัญชีครูให้ทดลองใช้ฟรี 7 วัน ส่วนรหัสสำหรับนักเรียนของครู สอบถามได้ในแชตเดียวกัน</div>
           <a class="btn primary" href="${LINE}" target="_blank" rel="noopener">ทัก LINE k.kaewta19</a></section>
         ${s && s.type === 'admin' ? '<p class="center"><a href="#/admin/teach">ไปที่เครื่องมือสอนของฉัน →</a></p>' : ''}
       </div>${footer()}`;
@@ -1351,13 +1361,98 @@
     else { SHEET = { title: m.title, sub: 'ใบงานตัวอย่าง', qs: qs.filter((q) => !q.audio), back: '#/teachers', demo: true, key: true }; pageSheet(); }
   }
 
+  /* ---------- ห้องเตรียมสอน: แผนการสอนรายบท + แผนรายเทอม ---------- */
+  const PLANS = window.LESSON_PLANS || {};
+  const PRICE = 390; // บาทต่อเดือน
+  const planOf = (c, u) => (PLANS[c] || {})[u];
+  const isAdmin = () => { const s = Store.session(); return !!(s && s.type === 'admin'); };
+  /** แผนที่เปิดอ่านฟรี = บทแรกของแต่ละคอร์ส (ไม่นับคาบทดสอบ) */
+  const freePlan = (cid) => { const c = courseById(cid); const u = c && c.units.find((x) => planOf(cid, x.id) && !planOf(cid, x.id).test); return u ? u.id : null; };
+  const sessionsOf = (p) => Math.max(1, Math.round(p.t / 55));
+  const planCourses = () => COURSES.filter((c) => !c.comingSoon && PLANS[c.id] && c.units.some((u) => planOf(c.id, u.id)));
+  const priceHTML = (forTeacher) => `<section class="price"><div><p class="eyebrow">สมาชิก Clarinerd</p><p class="price-n"><b>${PRICE}</b> บาท / เดือน</p></div>
+    <ul>${(forTeacher ? ['แผนการสอนและแผนรายเทอมครบทุกคอร์ส', 'สอนหน้าห้องและใบงานได้ทุกชุด สุ่มโจทย์ใหม่ไม่ซ้ำ', 'เนื้อหาและข้อสอบใหม่ทุกสัปดาห์', 'ทดลองใช้ฟรี 7 วันก่อนตัดสินใจ'] : ['เข้าได้ทุกคอร์ส ทุกชุดฝึก ทุกข้อมีเฉลยละเอียด', 'เนื้อหาและข้อสอบใหม่ทุกสัปดาห์', 'ข้อมูลการสอบที่ตรวจสอบและลงวันที่ทุกครั้ง', 'ทดลองใช้ฟรี 7 วันก่อนตัดสินใจ']).map((t) => `<li>${t}</li>`).join('')}</ul>
+    <a class="btn primary" href="${LINE}" target="_blank" rel="noopener">ทัก LINE ขอทดลองฟรี</a></section>`;
+  function newsHTML(n) {
+    const list = (window.NEWS || []).slice(0, n || 99);
+    return list.map((w) => `<div class="news-w"><p class="ex-h">สัปดาห์ ${esc(w.w)}</p><ul class="news">${w.items.map(([k, t]) => `<li><span class="tag">${esc(k)}</span><span>${esc(t)}</span></li>`).join('')}</ul>
+      ${w.next && w.next.length ? `<p class="small muted news-next"><b>กำลังทำต่อ:</b> ${w.next.map(esc).join(' · ')}</p>` : ''}</div>`).join('');
+  }
+  function pageNews() {
+    const s = Store.session();
+    $app.innerHTML = `${header(s && s.type === 'student' ? '<a href="#/courses">กลับห้องเรียน</a>' : '<a href="#/">หน้าแรก</a><a href="#/teachers">สำหรับครู</a>')}
+      <main class="narrow wide"><div class="page-head"><p class="eyebrow">อัปเดตทุกสัปดาห์</p><h1>มีอะไรใหม่</h1><p class="muted">Clarinerd เพิ่มเนื้อหา ข้อสอบ และตรวจข้อมูลการสอบใหม่ทุกสัปดาห์ รายการล่าสุดอยู่บนสุด</p></div>
+      <section class="card">${newsHTML()}</section></main>${footer()}`;
+  }
+  function pagePlans() {
+    const adm = isAdmin(), list = planCourses();
+    const total = list.reduce((n, c) => n + c.units.filter((u) => planOf(c.id, u.id)).length, 0);
+    $app.innerHTML = `${adm ? adminNav('teach') : header('<a href="#/">หน้านักเรียน</a><a href="#/teachers">สำหรับครู</a>')}
+      <div class="landing tland">
+        <section class="pv-hero" style="--c:#1ed760"><p class="eyebrow">ห้องเตรียมสอน</p><h1>แผนการสอนพร้อมใช้<br>${total} แผน ครบทุกบท</h1>
+          <p class="lead">แต่ละแผนบอกเวลาเป็นนาที ขั้นตอนในคาบ คำถามที่ใช้ถาม จุดที่นักเรียนมักเข้าใจผิดพร้อมวิธีแก้ การบ้าน และเกณฑ์ผ่าน กดเปิดโจทย์สอนหน้าห้องหรือพิมพ์ใบงานของบทนั้นได้จากหน้าเดียวกัน${adm ? '' : ' แผนบทแรกของทุกคอร์สและแผนรายเทอมเปิดอ่านฟรี'}</p></section>
+        ${list.map((c) => { const fp = freePlan(c.id); const us = c.units.filter((u) => planOf(c.id, u.id)); const ses = us.reduce((n, u) => n + sessionsOf(planOf(c.id, u.id)), 0);
+          return `<section class="card plan-course" style="--c:${c.color}"><div class="plan-ch"><div><h2>${esc(c.title)}</h2><p class="small muted">${us.length} แผน · รวมประมาณ ${ses} คาบ</p></div><a class="btn" href="#/term/${c.id}">แผนรายเทอม</a></div>
+            ${us.map((u) => { const p = planOf(c.id, u.id), open = adm || fp === u.id; return `<a class="plan-row" href="#/plan/${c.id}/${u.id}"><span class="n">${c.units.indexOf(u) + 1}</span><div><b>${esc(u.title)}</b><p>${esc(p.goals[0])}</p></div><span class="plan-meta">${p.t} นาที</span>${adm ? '' : open ? '<span class="tag free">อ่านฟรี</span>' : '<span class="lock" aria-label="สำหรับสมาชิก">🔒</span>'}</a>`; }).join('')}</section>`; }).join('')}
+        ${adm ? '' : priceHTML(true)}
+      </div>${footer()}`;
+  }
+  function pagePlan(cid, uid) {
+    const c = courseById(cid), u = c && c.units.find((x) => x.id === uid), p = planOf(cid, uid);
+    if (!c || !u || !p) return go('#/plans');
+    const adm = isAdmin(), open = adm || freePlan(cid) === uid, idx = c.units.indexOf(u);
+    const us = c.units.filter((x) => planOf(cid, x.id)), at = us.indexOf(u), prev = us[at - 1], next = us[at + 1];
+    const li = (a) => a.map((t) => `<li>${esc(t)}</li>`).join('');
+    const sets = u.sets || [];
+    $app.innerHTML = `<div class="sheet-bar"><a class="link" href="#/plans">← แผนทั้งหมด</a>
+        <span class="row">${prev ? `<a class="btn ghost" href="#/plan/${cid}/${prev.id}">← บทก่อน</a>` : ''}${next ? `<a class="btn ghost" href="#/plan/${cid}/${next.id}">บทถัดไป →</a>` : ''}${open ? '<button class="btn primary" data-act="sh-print">พิมพ์ / บันทึก PDF</button>' : ''}</span></div>
+      <main class="sheet plan">
+        <header class="sheet-head"><div><span>แผนการสอน · ${esc(c.short || c.title)} · บทที่ ${idx + 1}</span><b>${esc(u.title)}</b></div>
+          <div class="sheet-name"><span>เวลา ${p.t} นาที${sessionsOf(p) > 1 ? ` (${sessionsOf(p)} คาบ)` : ''}</span><span>วันที่สอน ________________</span><span>ห้อง / กลุ่ม ____________</span></div></header>
+        <p class="plan-who"><b>ผู้เรียน</b> ${esc(p.who)}</p>
+        <h3>จุดประสงค์ เมื่อจบคาบนักเรียนจะ</h3><ol>${li(p.goals)}</ol>
+        ${open ? `<h3>สื่อและอุปกรณ์</h3><ul>${li(p.prep)}</ul>
+        <h3>ขั้นตอนการสอน</h3><table class="plan-t"><thead><tr><th>นาที</th><th>ช่วง</th><th>กิจกรรม</th></tr></thead><tbody>${p.steps.map(([m, k, t]) => `<tr><td>${m}</td><td>${esc(k)}</td><td>${esc(t)}</td></tr>`).join('')}</tbody></table>
+        <h3>คำถามที่ใช้ถามในคาบ</h3><ul>${li(p.ask)}</ul>
+        <h3>จุดที่นักเรียนมักเข้าใจผิด</h3><table class="plan-t"><thead><tr><th>ที่พบบ่อย</th><th>วิธีแก้</th></tr></thead><tbody>${p.miss.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</tbody></table>
+        <h3>ปรับตามผู้เรียน</h3><ul><li><b>ยังไม่ทัน</b> ${esc(p.ext[0])}</li><li><b>ไปได้เร็ว</b> ${esc(p.ext[1])}</li></ul>
+        <h3>การบ้าน</h3><p>${esc(p.hw)}</p>
+        <h3>เกณฑ์ผ่าน</h3><p>${esc(p.pass)}</p>`
+        : `<h3>ขั้นตอนการสอน</h3><table class="plan-t"><thead><tr><th>นาที</th><th>ช่วง</th><th>กิจกรรม</th></tr></thead><tbody>${p.steps.map(([m, k]) => `<tr><td>${m}</td><td>${esc(k)}</td><td class="blur">รายละเอียดกิจกรรมสำหรับสมาชิก</td></tr>`).join('')}</tbody></table>
+        <p class="plan-locked">🔒 แผนฉบับเต็มมีรายละเอียดกิจกรรมทุกช่วง สื่อที่ต้องเตรียม คำถามที่ใช้ถาม จุดที่นักเรียนมักเข้าใจผิดพร้อมวิธีแก้ การบ้าน และเกณฑ์ผ่าน</p>`}
+        ${sets.length ? `<h3>ชุดฝึกของบทนี้ในเว็บ</h3><ul>${sets.map((s) => `<li>${esc(s.title)}</li>`).join('')}</ul>` : ''}
+        ${open ? '<h3 class="plan-note-h">บันทึกหลังสอน</h3><div class="plan-note"><i></i><i></i><i></i><i></i></div>' : ''}
+        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · แผนการสอนโดยครูดรีม (Kaewta Hongsa)</footer>
+      </main>
+      <section class="plan-tools">${adm && sets.length ? `<div class="card"><h2>เปิดใช้ในคาบ</h2><ul class="sets">${sets.map((s) => `<li><div><b>${esc(s.title)}</b></div><div class="set-btns"><button class="btn primary" data-teach="class|${cid}|${s.id}">สอนหน้าห้อง</button><button class="btn" data-teach="sheet|${cid}|${s.id}">ใบงาน</button></div></li>`).join('')}</ul></div>` : ''}
+        ${adm ? '' : open ? `<div class="trial pv-cta"><div><b>แผนนี้เปิดอ่านฟรี</b> ลองใช้คู่กับโหมดสอนหน้าห้องและใบงานตัวอย่างของคอร์สนี้ได้เลย</div>${PREVIEW[cid] ? `<a class="btn primary" href="#/teach-demo/${cid}">ลองสอนหน้าห้อง</a>` : `<a class="btn primary" href="#/teachers">ดูเครื่องมือครู</a>`}</div>${priceHTML(true)}` : priceHTML(true)}</section>`;
+  }
+  function pageTerm(cid) {
+    const c = courseById(cid); if (!c || !PLANS[cid]) return go('#/plans');
+    const us = c.units.filter((u) => planOf(cid, u.id)); let k = 0;
+    const rows = us.map((u) => { const p = planOf(cid, u.id), n = sessionsOf(p), from = k + 1; k += n;
+      return `<tr><td>${n > 1 ? `${from}–${k}` : from}</td><td><b>${esc(u.title)}</b><br><span>${p.t} นาที</span></td><td><ul>${p.goals.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></td><td>${(u.sets || []).length ? `<ul>${u.sets.map((s) => `<li>${esc(s.title)}</li>`).join('')}</ul>` : '–'}</td><td>${esc(p.hw)}</td><td>${esc(p.pass)}</td></tr>`; }).join('');
+    $app.innerHTML = `<div class="sheet-bar"><a class="link" href="#/plans">← แผนทั้งหมด</a><span class="row"><button class="btn primary" data-act="sh-print">พิมพ์ / บันทึก PDF</button></span></div>
+      <main class="sheet plan term">
+        <header class="sheet-head"><div><span>แผนการสอนรายเทอม</span><b>${esc(c.title)}</b></div>
+          <div class="sheet-name"><span>รวม ${k} คาบ · ${us.length} บท</span><span>ภาคเรียน ____ ปีการศึกษา ______</span><span>ครูผู้สอน __________________</span></div></header>
+        <p class="plan-who">${esc(c.desc || '')}</p>
+        <table class="plan-t term-t"><thead><tr><th>คาบที่</th><th>บท</th><th>จุดประสงค์</th><th>ชุดฝึกในเว็บ</th><th>การบ้าน</th><th>เกณฑ์ผ่าน</th></tr></thead><tbody>${rows}</tbody></table>
+        <p class="small">หนึ่งคาบคิดประมาณ 50–60 นาที ปรับจำนวนคาบได้ตามเวลาเรียนจริงและพื้นฐานของนักเรียน แผนรายบทมีขั้นตอนละเอียดของแต่ละคาบ</p>
+        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · แผนการสอนโดยครูดรีม (Kaewta Hongsa)</footer>
+      </main>
+      ${isAdmin() ? '' : `<section class="plan-tools">${priceHTML(true)}</section>`}`;
+  }
+
   /* ---------- หน้า “สอน” ของครู: เลือกชุดแล้วสอนหน้าห้อง / ทำใบงาน ---------- */
   function pageAdminTeach() {
     if (!requireAdmin()) return;
     $app.innerHTML = `${adminNav('teach')}
       <main><div class="page-head"><h1>สอน</h1><p class="muted">เลือกชุดแล้วกด “สอนหน้าห้อง” เพื่อฉายโจทย์ทีละข้อ หรือ “ใบงาน” เพื่อพิมพ์แจก ไม่มีการเก็บคะแนนในโหมดนี้</p></div>
+      <section class="trial pv-cta"><div><b>ห้องเตรียมสอน</b> แผนการสอนรายบทและแผนรายเทอมของทุกคอร์ส พิมพ์ได้</div><a class="btn primary" href="#/plans">เปิดแผนการสอน</a></section>
       ${COURSES.filter((c) => !c.comingSoon).map((c) => `<details class="card teach-course" style="--c:${c.color}"><summary><b>${esc(c.title)}</b><span class="small muted"> · ${c.units.length} บท</span></summary>
-        ${c.units.map((u, i) => `<div class="teach-unit"><p><span class="num" style="background:${c.color}">${i + 1}</span><b>${esc(u.title)}</b></p>
+        ${PLANS[c.id] ? `<p class="teach-links"><a href="#/term/${c.id}">แผนรายเทอม →</a></p>` : ''}
+        ${c.units.map((u, i) => `<div class="teach-unit"><p><span class="num" style="background:${c.color}">${i + 1}</span><b>${esc(u.title)}</b>${planOf(c.id, u.id) ? ` <a class="small" href="#/plan/${c.id}/${u.id}">แผนการสอน →</a>` : ''}</p>
           <ul class="sets">${u.sets.map((st) => `<li><div><b>${esc(st.title)}</b></div><div class="set-btns">
             <button class="btn primary" data-teach="class|${c.id}|${st.id}">สอนหน้าห้อง</button>
             <button class="btn" data-teach="sheet|${c.id}|${st.id}">ใบงาน</button></div></li>`).join('')}</ul></div>`).join('')}
@@ -1487,6 +1582,10 @@
       case 'teach-demo': return startDemo('class', arg);
       case 'sheet-demo': return startDemo('sheet', arg);
       case 'glossary': return pageGlossary();
+      case 'plans': return pagePlans();
+      case 'plan': return pagePlan(arg, location.hash.split('/')[3]);
+      case 'term': return pageTerm(arg);
+      case 'news': return pageNews();
       case 'admin':
         if (arg === 'results') return pageAdminResults();
         if (arg === 'student') return pageAdminStudent(location.hash.split('/').slice(3).join('/'));
