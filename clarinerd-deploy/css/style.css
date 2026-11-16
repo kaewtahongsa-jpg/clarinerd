@@ -721,3 +721,17 @@ main.sheet.cert { padding: 28px; text-align: center; }
 main.lesson-page { max-width: 860px; }
 main.lesson-page .lesson-body { font-size: 1.02rem; line-height: 1.75; padding-bottom: 0; }
 main.lesson-page .pv-q + .pv-q { margin-top: 26px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.08); }
+
+/* ---------- บทเรียนแบบทีละขั้น ---------- */
+.lesson-body .step-h { display: flex; align-items: center; gap: 12px; margin: 34px 0 10px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.1); font-size: 1.18rem; color: var(--ink); }
+.lesson-body .step-h span { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: #0b0b0d; display: flex; align-items: center; justify-content: center; font-size: .9rem; }
+.lesson-body details.try { margin: 14px 0 4px; border: 1px dashed rgba(30,215,96,.5); border-radius: 10px; padding: 0; }
+.lesson-body details.try summary { cursor: pointer; padding: 12px 16px; list-style: none; color: var(--ink); }
+.lesson-body details.try summary::-webkit-details-marker { display: none; }
+.lesson-body details.try summary::after { content: 'กดดูเฉลย'; float: right; font-size: .78rem; color: var(--gold); font-weight: 700; }
+.lesson-body details.try[open] summary::after { content: 'ซ่อนเฉลย'; }
+.lesson-body details.try summary b { color: var(--gold); margin-right: 6px; }
+.lesson-body details.try p { margin: 0; padding: 0 16px 14px; color: var(--ink-2); }
+.lesson-body details.try p b { color: var(--ink); }
+.lesson-body ol, .lesson-body ul { padding-left: 22px; }
+.lesson-body li { margin: 4px 0; }
