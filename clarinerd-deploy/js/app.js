@@ -5,6 +5,8 @@
   const $app = document.getElementById('app');
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const go = (h) => { if (location.hash === h) route(); else location.hash = h; };
+  // ลิงก์เว็บสำหรับข้อความที่ส่งให้นักเรียน/ครู (เปิดจากเครื่องต้นฉบับ = ใช้ลิงก์เว็บหลัก)
+  const siteURL = () => (/localhost|127\.0\.0\.1/.test(location.hostname) || location.protocol === 'file:') ? 'https://kaewtahongsa-jpg.github.io/clarinerd/' : location.origin + location.pathname.replace(/index\.html$/, '');
   const pct = (s, t) => (t ? Math.round((s / t) * 100) : 0);
   const fmtDate = (iso) => { if (!iso) return '—'; const d = new Date(iso); return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }); };
   const fmtDateTime = (iso) => { const d = new Date(iso); return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }); };
@@ -873,7 +875,7 @@
     return '<span class="status on">ใช้งานได้</span>';
   }
   function shareText(c) {
-    return `รหัสเข้าเรียน Clarinerd ของ ${c.name}\nรหัส: ${c.code}\nคอร์ส: ${c.courses.map((id) => courseById(id)?.short).join(', ')}\nใช้ได้ถึง: ${c.expires ? fmtDate(c.expires) : 'ไม่มีวันหมดอายุ'}\nเข้าเรียนที่: ${location.origin + location.pathname}`;
+    return `รหัสเข้าเรียน Clarinerd ของ ${c.name}\nรหัส: ${c.code}\nคอร์ส: ${c.courses.map((id) => courseById(id)?.short).join(', ')}\nใช้ได้ถึง: ${c.expires ? fmtDate(c.expires) : 'ไม่มีวันหมดอายุ'}\nเข้าเรียนที่: ${siteURL()}`;
   }
 
   const staffName = (id) => { const s = (Store.staff && Store.staff()) || []; const x = s.find((a) => a.user_id === id); return x ? x.name || x.email : '—'; };
@@ -894,7 +896,7 @@
         </section>
       </main>`;
     const me = ((Store.staff && Store.staff()) || []).find((a) => a.role === 'teacher');
-    const site = location.origin.includes('localhost') ? 'https://clarinerd.netlify.app' : location.origin;
+    const site = siteURL();
     document.getElementById('invCopy').onclick = (e) => copyText(e.target, `ครูใช้เว็บ Clarinerd ให้ฝึกทำข้อสอบดนตรีและส่งการบ้าน\nสมัครสมาชิก ${PRICE} บาทต่อเดือน ทดลองฟรี 7 วัน\n1) ดูตัวอย่างที่ ${site}\n2) ทัก LINE k.kaewta19 แล้วบอกว่าเป็นนักเรียนของ${me && me.name ? ' ' + me.name : 'ครูคนไหน'}\nเมื่อได้รหัสแล้ว ครูจะเห็นคะแนนและการบ้านในระบบ`);
   }
   function pageAdminCodes() {
@@ -1002,8 +1004,8 @@
     }).filter((r) => r.gone !== null && r.gone >= 3).sort((a, b) => a.gone - b.gone);
     FOLLOW = {};
     away.forEach((r) => { FOLLOW[r.c.code] = r.last
-      ? `สวัสดี ${r.c.name} ไม่ได้เข้ามาฝึกใน Clarinerd ${r.gone} วันแล้วนะ วันนี้ลองทำสัก 1 ชุดก็พอ ใช้เวลาประมาณ 10 นาที${r.weak.length ? ' ดรีมแนะนำเรื่อง “' + r.weak[0] + '” ที่ยังพลาดบ่อย' : ''}\nเข้าได้ที่ ${location.origin.includes('localhost') ? 'https://clarinerd.netlify.app' : location.origin} ด้วยรหัสเดิม ติดตรงไหนกดถามครูใต้เฉลยได้เลย`
-      : `สวัสดี ${r.c.name} รหัสเข้า Clarinerd ที่ดรีมส่งให้ยังไม่ได้ลองใช้เลยนะ ลองเข้าไปทำชุดแรกดู ใช้เวลาประมาณ 10 นาที\nเข้าได้ที่ ${location.origin.includes('localhost') ? 'https://clarinerd.netlify.app' : location.origin} รหัส ${r.c.code} ติดตรงไหนทักดรีมได้เลย`; });
+      ? `สวัสดี ${r.c.name} ไม่ได้เข้ามาฝึกใน Clarinerd ${r.gone} วันแล้วนะ วันนี้ลองทำสัก 1 ชุดก็พอ ใช้เวลาประมาณ 10 นาที${r.weak.length ? ' ดรีมแนะนำเรื่อง “' + r.weak[0] + '” ที่ยังพลาดบ่อย' : ''}\nเข้าได้ที่ ${siteURL()} ด้วยรหัสเดิม ติดตรงไหนกดถามครูใต้เฉลยได้เลย`
+      : `สวัสดี ${r.c.name} รหัสเข้า Clarinerd ที่ดรีมส่งให้ยังไม่ได้ลองใช้เลยนะ ลองเข้าไปทำชุดแรกดู ใช้เวลาประมาณ 10 นาที\nเข้าได้ที่ ${siteURL()} รหัส ${r.c.code} ติดตรงไหนทักดรีมได้เลย`; });
     const followCard = `<section class="card"><h2>ควรทักตาม <span class="badge">${away.length}</span></h2>
       <p class="muted small">นักเรียนที่รหัสยังใช้ได้ แต่ไม่ได้เข้ามาฝึก 3 วันขึ้นไป กด “คัดลอกข้อความ” แล้วไปวางใน LINE ของนักเรียนได้เลย</p>
       ${away.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>ชื่อ</th><th>หายไป</th><th>ฝึกล่าสุด</th><th>ควรทบทวน</th><th></th></tr></thead><tbody>
@@ -1050,7 +1052,7 @@
         <h3>แนะนำสำหรับเดือนถัดไป</h3><ul>${weak.length ? `<li>ฝึกหัวข้อ ${weak.map(([t]) => `“${esc(t)}”`).join(' ')} ด้วยปุ่ม “ฝึกจุดอ่อน” ในหน้าคอร์ส</li>` : '<li>ลองทำชุดถัดไปของคอร์ส หรือทำข้อสอบจับเวลา</li>'}<li>${days >= 20 ? 'ฝึกสม่ำเสมอดีมาก รักษาจังหวะนี้ไว้' : days >= 8 ? 'เพิ่มเป็นวันเว้นวัน ครั้งละ 10 นาที จะจำได้นานกว่าฝึกครั้งเดียวนาน ๆ' : 'ตั้งเป้าฝึกสัปดาห์ละ 3 วัน วันละ 1 ชุด'}</li></ul>`
         : '<p>ยังไม่มีผลการฝึกในช่วง 30 วันนี้</p>'}
         ${teacher ? '<h3 class="plan-note-h">ความเห็นครู</h3><div class="plan-note"><i></i><i></i><i></i></div>' : ''}
-        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · คำนวณจากผลที่บันทึกในระบบ ณ วันที่พิมพ์</footer>
+        <footer class="sheet-foot">Clarinerd · kaewtahongsa-jpg.github.io/clarinerd · คำนวณจากผลที่บันทึกในระบบ ณ วันที่พิมพ์</footer>
       </main>`;
   }
   function pageReport() { const rec = requireStudent(); if (!rec) return; $app.innerHTML = reportHTML(rec.name, Store.attemptsFor(rec.code), '#/me', false); }
@@ -1071,7 +1073,7 @@
         <p>ผ่านการทดสอบ</p><h2>${esc(a.setTitle)}</h2><p>คอร์ส ${esc(c.title)}</p>
         <p class="cert-score">${a.score} / ${a.total} คะแนน (${pct(a.score, a.total)}%)</p>
         <p class="cert-date">${fmtDate(dayKey(a.date))}</p>
-        <p class="cert-foot">เกียรติบัตรนี้ออกโดย Clarinerd สำหรับแบบทดสอบในเว็บ clarinerd.netlify.app ไม่ใช่ผลสอบของหน่วยงานจัดสอบ</p>
+        <p class="cert-foot">เกียรติบัตรนี้ออกโดย Clarinerd สำหรับแบบทดสอบในเว็บ kaewtahongsa-jpg.github.io/clarinerd ไม่ใช่ผลสอบของหน่วยงานจัดสอบ</p>
       </div></main>`;
   }
   function copyText(btn, msg) {
@@ -1091,7 +1093,7 @@
       return { k, n: mine.length, best, last: mine.length ? mine[mine.length - 1].date : null };
     }).sort((a, b) => (a.n ? 1 : 0) - (b.n ? 1 : 0) || a.k.name.localeCompare(b.k.name, 'th'));
     const done = rows.filter((r) => r.n), avg = done.length ? Math.round(done.reduce((n, r) => n + r.best, 0) / done.length) : null;
-    const site = location.origin.includes('localhost') ? 'https://clarinerd.netlify.app' : location.origin;
+    const site = siteURL();
     const assign = `การบ้าน Clarinerd\nคอร์ส ${c.short || c.title} ชุด “${set.title}”\nทำในโหมดฝึกให้ได้ 80% ขึ้นไป ทำซ้ำได้หลายรอบ ครูเห็นคะแนนที่ดีที่สุด\nเข้าที่ ${site} แล้วใส่รหัสของตัวเอง`;
     const remind = `ยังไม่เห็นการบ้านชุด “${set.title}” (${c.short || c.title}) ของ: ${rows.filter((r) => !r.n).map((r) => r.k.name).join(', ')}\nทำได้ที่ ${site} ใช้เวลาประมาณ 10 นาที`;
     $app.innerHTML = `${adminNav('homework')}
@@ -1522,7 +1524,7 @@
         <ol class="sheet-qs">${S.qs.map((q, i) => `<li><p class="sq">${esc(q.q)}</p>
           ${q.notation ? `<div class="staff sheet-staff" data-i="${i}"></div>` : ''}
           <div class="sc">${q.choices.map((ch, j) => `<span><b>${LETTERS[j] || j + 1}.</b> ${esc(ch)}</span>`).join('')}</div></li>`).join('')}</ol>
-        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app${S.demo ? ' · ใบงานตัวอย่าง' : ''}</footer>
+        <footer class="sheet-foot">Clarinerd · kaewtahongsa-jpg.github.io/clarinerd${S.demo ? ' · ใบงานตัวอย่าง' : ''}</footer>
         <section class="sheet-key"><h2>เฉลย · ${esc(S.title)}</h2><p class="small">${esc(S.sub || '')} · พิมพ์เมื่อ ${today}</p>
           <ol>${S.qs.map((q) => { const x = q.ex || {}; const why = (x.th || q.e || '').split('\n')[0]; return `<li><b>${LETTERS[q.answer]}. ${esc(q.choices[q.answer])}</b>${why ? `<span>${esc(why)}</span>` : ''}</li>`; }).join('')}</ol></section>
       </main>
@@ -1652,7 +1654,7 @@
         <p class="plan-locked">🔒 แผนฉบับเต็มมีรายละเอียดกิจกรรมทุกช่วง สื่อที่ต้องเตรียม คำถามที่ใช้ถาม จุดที่นักเรียนมักเข้าใจผิดพร้อมวิธีแก้ การบ้าน และเกณฑ์ผ่าน</p>`}
         ${sets.length ? `<h3>ชุดฝึกของบทนี้ในเว็บ</h3><ul>${sets.map((s) => `<li>${esc(s.title)}</li>`).join('')}</ul>` : ''}
         ${open ? '<h3 class="plan-note-h">บันทึกหลังสอน</h3><div class="plan-note"><i></i><i></i><i></i><i></i></div>' : ''}
-        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · ปรับใช้ตามบริบทของห้องเรียนได้</footer>
+        <footer class="sheet-foot">Clarinerd · kaewtahongsa-jpg.github.io/clarinerd · ปรับใช้ตามบริบทของห้องเรียนได้</footer>
       </main>
       <section class="plan-tools">${adm && sets.length ? `<div class="card"><h2>เปิดใช้ในคาบ</h2><ul class="sets">${sets.map((s) => `<li><div><b>${esc(s.title)}</b></div><div class="set-btns"><button class="btn primary" data-teach="class|${cid}|${s.id}">สอนหน้าห้อง</button><button class="btn" data-teach="sheet|${cid}|${s.id}">ใบงาน</button></div></li>`).join('')}</ul></div>` : ''}
         ${adm ? '' : open ? `<div class="trial pv-cta"><div><b>แผนนี้เปิดอ่านฟรี</b> ลองใช้คู่กับโหมดสอนหน้าห้องและใบงานตัวอย่างของคอร์สนี้ได้เลย</div>${PREVIEW[cid] ? `<a class="btn primary" href="#/teach-demo/${cid}">ลองสอนหน้าห้อง</a>` : `<a class="btn primary" href="#/teachers">ดูเครื่องมือครู</a>`}</div>${priceHTML(true)}` : priceHTML(true)}</section>`;
@@ -1669,7 +1671,7 @@
         <p class="plan-who">${esc(c.desc || '')}</p>
         <table class="plan-t term-t"><thead><tr><th>คาบที่</th><th>บท</th><th>จุดประสงค์</th><th>ชุดฝึกในเว็บ</th><th>การบ้าน</th><th>เกณฑ์ผ่าน</th></tr></thead><tbody>${rows}</tbody></table>
         <p class="small">หนึ่งคาบคิดประมาณ 50–60 นาที ปรับจำนวนคาบได้ตามเวลาเรียนจริงและพื้นฐานของนักเรียน แผนรายบทมีขั้นตอนละเอียดของแต่ละคาบ</p>
-        <footer class="sheet-foot">Clarinerd · clarinerd.netlify.app · ปรับใช้ตามบริบทของห้องเรียนได้</footer>
+        <footer class="sheet-foot">Clarinerd · kaewtahongsa-jpg.github.io/clarinerd · ปรับใช้ตามบริบทของห้องเรียนได้</footer>
       </main>
       ${isAdmin() ? '' : `<section class="plan-tools">${priceHTML(true)}</section>`}`;
   }
