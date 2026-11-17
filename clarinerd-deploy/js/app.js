@@ -1496,6 +1496,12 @@
     else return;
     Music.stop(); window.scrollTo(0, 0); pageClass();
   }
+  // ปุ่ม ▶ ในบทเรียน (data-audio = รายการเสียงสำหรับ Music.play)
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-audio]'); if (!b) return;
+    e.preventDefault();
+    try { Music.play(JSON.parse(b.dataset.audio)); } catch (x) {}
+  });
   document.addEventListener('keydown', (e) => {
     if (!CLASS || !document.querySelector('main.klass') || document.getElementById('glVeil') || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); klassStep(CLASS.shown ? 'kl-next' : 'kl-show'); }
