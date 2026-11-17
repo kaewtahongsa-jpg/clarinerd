@@ -307,7 +307,7 @@
   const VAL = [
     { d: 'w', b: 4, en: 'semibreve', th: 'ตัวกลม' }, { d: 'h', b: 2, en: 'minim', th: 'ตัวขาว' }, { d: 'q', b: 1, en: 'crotchet', th: 'ตัวดำ' },
     { d: '8', b: 0.5, en: 'quaver', th: 'เขบ็ต 1 ชั้น' }, { d: 'h', dots: 1, b: 3, en: 'dotted minim', th: 'ตัวขาวประจุด' }, { d: 'q', dots: 1, b: 1.5, en: 'dotted crotchet', th: 'ตัวดำประจุด' },
-    { d: '16', b: 0.25, en: 'semiquaver', th: 'เขบ็ต 2 ชั้น', g: 2 }, { d: '8', dots: 1, b: 0.75, en: 'dotted quaver', th: 'เขบ็ต 1 ชั้นประจุด', g: 2 },
+    { d: '16', b: 0.25, en: 'semiquaver', th: 'เขบ็ต 2 ชั้น', g: 1 }, { d: '8', dots: 1, b: 0.75, en: 'dotted quaver', th: 'เขบ็ต 1 ชั้นประจุด', g: 2 },
     { d: '32', b: 0.125, en: 'demisemiquaver', th: 'เขบ็ต 3 ชั้น', g: 3 }, { d: 'w', dots: 1, b: 6, en: 'dotted semibreve', th: 'ตัวกลมประจุด', g: 3 },
   ];
   const fr = (x) => ({ 0.125: '⅛', 0.25: '¼', 0.5: '½', 0.75: '¾', 1.5: '1½' }[x] || String(x));
