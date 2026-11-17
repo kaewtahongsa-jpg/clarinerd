@@ -31,7 +31,7 @@
       c: [SIG[maj], ...wrong.map((k) => SIG[k])],
       ex: {
         qAlt: `What is the key signature of ${name}?`,
-        th: minor ? `${name} เป็นไมเนอร์คู่ขนาน (relative minor) ของ ${maj} major จึงใช้เครื่องหมายประจำกุญแจเสียงเดียวกัน คือ ${SIG[maj]}\nวิธีหา: ขึ้นจากโทนิกของไมเนอร์ไป 3 ครึ่งเสียง จะได้เมเจอร์คู่ขนาน (${REL[maj]} → ${maj})`
+        th: minor ? `${name} เป็นไมเนอร์คู่สัมพันธ์ (relative minor) ของ ${maj} major จึงใช้เครื่องหมายประจำกุญแจเสียงเดียวกัน คือ ${SIG[maj]}\nวิธีหา: ขึ้นจากโทนิกของไมเนอร์ไป 3 ครึ่งเสียง จะได้เมเจอร์คู่สัมพันธ์ (${REL[maj]} → ${maj})`
           : `${name} มี ${SIG[maj]}\nลำดับชาร์ป: F C G D · ลำดับแฟลต: B E A D`,
         en: minor ? `${name} is the relative minor of ${maj} major, so it shares its key signature: ${SIGEN[maj]}.\nGo up 3 semitones from the minor tonic to find the relative major.` : `${name} has ${SIGEN[maj]}.\nOrder of sharps: F C G D · order of flats: B E A D.`,
         why: wrong.map((k) => `${SIG[k]} เป็นของ ${k} major และ ${REL[k]} minor`), whyEn: wrong.map((k) => `${SIGEN[k]} belongs to ${k} major and ${REL[k]} minor`),

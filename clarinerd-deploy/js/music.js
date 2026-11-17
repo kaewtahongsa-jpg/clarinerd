@@ -248,7 +248,7 @@ const Music = (() => {
       const list = FLAT_ORDER.slice(0, k.n);
       s = `ขั้นที่ 1 มีแฟลต ${k.n} ตัว: ${list.map((x) => x + '♭').join(' ')}\nขั้นที่ 2 วิธีลัด: ${k.n === 1 ? '1 แฟลต ให้จำว่าเป็น F major' : `แฟลตตัวรองสุดท้าย (${list[list.length - 2]}♭) คือชื่อคีย์เมเจอร์`} = ${pretty(k.major)} major`;
     }
-    if (asMinor) s += `\nขั้นที่ 3 ไมเนอร์คู่ขนาน (relative minor) อยู่ต่ำกว่าคีย์เมเจอร์ 3 ครึ่งเสียง (ขั้นที่ 6 ของบันไดเสียงเมเจอร์) → ${pretty(k.minor)} minor`;
+    if (asMinor) s += `\nขั้นที่ 3 ไมเนอร์คู่สัมพันธ์ (relative minor) อยู่ต่ำกว่าคีย์เมเจอร์ 3 ครึ่งเสียง (ขั้นที่ 6 ของบันไดเสียงเมเจอร์) → ${pretty(k.minor)} minor`;
     return s;
   }
   function triadExplain(notes, quality, name) {

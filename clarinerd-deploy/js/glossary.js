@@ -143,7 +143,7 @@
     'แผนผังที่เรียงคีย์ห่างกันทีละคู่ 5 เพอร์เฟกต์ ขึ้นคู่ 5 หนึ่งครั้งได้ชาร์ปเพิ่ม 1 ตัว (C → G → D → A → E → B → F♯) ลงคู่ 5 หนึ่งครั้งได้แฟลตเพิ่ม 1 ตัว (C → F → B♭ → E♭ → A♭ → D♭ → G♭)\nคีย์ที่อยู่ติดกันในวงจรต่างกันแค่โน้ตเดียว จึงเป็นคีย์ใกล้ชิดกัน',
     'A chart of keys a perfect 5th apart. Each step up a 5th adds one sharp (C → G → D → A → E → B → F♯); each step down a 5th adds one flat (C → F → B♭ → E♭ → A♭ → D♭ → G♭).\nNeighbours on the circle differ by only one note, so they are closely related keys.',
     ['key-sig', 'relative', 'perfect']);
-  add(c, 'relative', 'คีย์คู่ขนาน (Relative) และ Parallel', 'Relative & parallel keys', ['คู่ขนาน', 'relative minor', 'relative major', 'parallel minor', 'parallel major'],
+  add(c, 'relative', 'คีย์คู่สัมพันธ์ (Relative) และคีย์คู่ขนาน (Parallel)', 'Relative & parallel keys', ['คู่สัมพันธ์', 'คู่ขนาน', 'relative minor', 'relative major', 'parallel minor', 'parallel major'],
     'Relative: คีย์เมเจอร์กับไมเนอร์ที่ใช้เครื่องหมายประจำกุญแจเสียงเดียวกัน ไมเนอร์อยู่ต่ำกว่าเมเจอร์ลงมาคู่ 3 ไมเนอร์ (3 ครึ่งเสียง) เช่น C เมเจอร์ ↔ A ไมเนอร์\nParallel: คีย์เมเจอร์กับไมเนอร์ที่เริ่มโน้ตเดียวกัน เช่น C เมเจอร์ ↔ C ไมเนอร์ (เครื่องหมายต่างกัน 3 ตัว)',
     'Relative: a major and a minor key sharing one key signature. The minor lies a minor 3rd (3 semitones) below the major, e.g. C major ↔ A minor.\nParallel: a major and a minor key on the same tonic, e.g. C major ↔ C minor (their signatures differ by three accidentals).',
     ['key-sig', 'minor-scale', 'circle-fifths']);
